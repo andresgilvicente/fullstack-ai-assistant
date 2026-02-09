@@ -1,0 +1,142 @@
+services:
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: frontend-das
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - NEXT_PUBLIC_API_URL=http://localhost:8000
+    restart: unless-stopped
+    networks:
+      - ollama-docker
+    depends_on:
+      - backend
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: postgres-das
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=das_user
+      - POSTGRES_PASSWORD=das_password
+      - POSTGRES_DB=das_db
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+    networks:
+      - ollama-docker
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U das_user -d das_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: backend-das
+    ports:
+      - "8000:8000"
+    environment:
+      - USE_POSTGRES=true
+      - POSTGRES_DB=das_db
+      - POSTGRES_USER=das_user
+      - POSTGRES_PASSWORD=das_password
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+      - DJANGO_SECRET_KEY=django-insecure-secret-key-change-in-production
+      - DEBUG=True
+      - OLLAMA_HOST=http://ollama:11434
+    depends_on:
+      postgres:
+        condition: service_healthy
+      ollama:
+        condition: service_started
+    restart: unless-stopped
+    networks:
+      - ollama-docker
+
+  ollama:
+    image: docker.io/ollama/ollama:latest
+    ports:
+      - 11434:11434
+    volumes:
+      - ollama_data:/root/.ollama
+    container_name: ollama
+    pull_policy: always
+    tty: true
+    restart: always
+    environment:
+      - OLLAMA_KEEP_ALIVE=24h
+      - OLLAMA_HOST=0.0.0.0
+    networks:
+      - ollama-docker
+    healthcheck:
+      test: ["CMD", "ollama", "list"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  ollama-init:
+    image: docker.io/ollama/ollama:latest
+    container_name: ollama-init
+    volumes:
+      - ollama_data:/root/.ollama
+    networks:
+      - ollama-docker
+    depends_on:
+      ollama:
+        condition: service_healthy
+    environment:
+      - OLLAMA_HOST=http://ollama:11434
+      - OLLAMA_MODELS=${OLLAMA_MODELS:-llama3.2:3b}
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        echo "Esperando a que Ollama esté listo..."
+        sleep 5
+        echo "Descargando modelos: $$OLLAMA_MODELS"
+        for model in $$(echo $$OLLAMA_MODELS | tr ',' ' '); do
+          echo "Descargando modelo: $$model"
+          ollama pull $$model
+        done
+        echo "Modelos descargados exitosamente"
+    restart: "no"
+
+  # ollama-webui (OPCIONAL - descomenta si quieres usar la interfaz web)
+  # ollama-webui:
+  #   image: ghcr.io/open-webui/open-webui:main
+  #   container_name: ollama-webui
+  #   volumes:
+  #     - ollama_webui_data:/app/backend/data
+  #   depends_on:
+  #     - ollama
+  #   ports:
+  #     - 8080:8080
+  #   environment:
+  #     - OLLAMA_BASE_URLS=http://ollama:11434
+  #     - ENV=dev
+  #     - WEBUI_AUTH=False
+  #     - WEBUI_NAME=DAS main AI
+  #     - WEBUI_URL=http://localhost:8080
+  #     - WEBUI_SECRET_KEY=t0p-s3cr3t
+  #   restart: unless-stopped
+  #   networks:
+  #     - ollama-docker
+
+networks:
+  ollama-docker:
+    external: false
+
+volumes:
+  postgres_data:
+    driver: local
+  ollama_data:
+    driver: local
+  # ollama_webui_data:
+  #   driver: local

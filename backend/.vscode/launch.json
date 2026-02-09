@@ -1,0 +1,64 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Django: runserver",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/restApi/manage.py",
+      "args": ["runserver"],
+      "django": true,
+      "justMyCode": true,
+      "env": {
+        "DJANGO_SETTINGS_MODULE": "restApi.settings"
+      }
+    },
+    {
+      "name": "Django: runserver with custom port",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/restApi/manage.py",
+      "args": ["runserver", "0.0.0.0:8000"],
+      "django": true,
+      "justMyCode": true,
+      "env": {
+        "DJANGO_SETTINGS_MODULE": "restApi.settings"
+      }
+    },
+    {
+      "name": "Django: makemigrations",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/restApi/manage.py",
+      "args": ["makemigrations"],
+      "django": true,
+      "justMyCode": true
+    },
+    {
+      "name": "Django: migrate",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/restApi/manage.py",
+      "args": ["migrate"],
+      "django": true,
+      "justMyCode": true
+    },
+    {
+      "name": "Django: shell",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/restApi/manage.py",
+      "args": ["shell"],
+      "django": true,
+      "justMyCode": true
+    },
+    {
+      "name": "Python: Current File",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${file}",
+      "console": "integratedTerminal",
+      "justMyCode": true
+    }
+  ]
+}
