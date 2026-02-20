@@ -52,6 +52,7 @@ INSTALLED_APPS = [
     "healthcheck",
     "users",
     "usage",
+    "chats",
 ]
 
 MIDDLEWARE = [
