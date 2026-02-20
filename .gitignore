@@ -1,1 +1,7 @@
 ollama
+
+
+# files
+*.pdf
+
+*.env  
