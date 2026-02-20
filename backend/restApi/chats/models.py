@@ -2,27 +2,15 @@ from django.db import models
 from django.conf import settings
 
 
+# modelo de chat, representa una conversacion del usuario con la ia
+# relacion 1 user a n chats
 class Chat(models.Model):
-    """
-    Modelo que representa una conversación del usuario con la IA.
-    Relación: 1 User → N Chats (un usuario puede tener muchos chats).
-    """
-
-    # Título del chat (ej: "Ayuda con Python", "Recetas de cocina")
-    title = models.CharField(max_length=255)
-
-    # Fecha y hora en la que se creó el chat.
-    # auto_now_add=True → Django la pone automáticamente al crear el registro
-    created_at = models.DateTimeField(auto_now_add=True)
-
-    # Relación muchos-a-uno con User:
-    # - ForeignKey: muchos chats pueden pertenecer a un usuario
-    # - CASCADE: si se borra el usuario, se borran todos sus chats
-    # - related_name="chats": permite hacer user.chats.all() desde el usuario
-    user = models.ForeignKey(
+    title = models.CharField(max_length=255)  # titulo del chat
+    created_at = models.DateTimeField(auto_now_add=True)  # se pone solo al crear
+    user = models.ForeignKey(  # muchos chats pertenecen a un usuario
         settings.AUTH_USER_MODEL,
-        on_delete=models.CASCADE,
-        related_name="chats",
+        on_delete=models.CASCADE,  # si se borra el usuario se borran sus chats
+        related_name="chats",  # para poder hacer user.chats.all()
     )
 
     def __str__(self):
@@ -33,37 +21,20 @@ class Chat(models.Model):
         verbose_name_plural = "Chats"
 
 
+# modelo de mensaje dentro de un chat
+# relacion 1 chat a n mensajes
 class ChatMessage(models.Model):
-    """
-    Modelo que representa un mensaje dentro de un chat.
-    Relación: 1 Chat → N ChatMessages (un chat tiene muchos mensajes).
-
-    El campo 'role' indica quién escribió el mensaje:
-    - "user": lo escribió el usuario
-    - "system": lo respondió la IA
-    """
-
-    # Opciones válidas para el campo role
     ROLE_CHOICES = [
-        ("user", "user"),       # Mensaje del usuario
-        ("system", "system"),   # Respuesta de la IA
+        ("user", "user"),  # mensaje del usuario
+        ("system", "system"),  # respuesta de la ia
     ]
 
-    # Quién escribió el mensaje: "user" o "system"
-    # choices=ROLE_CHOICES → restringe a solo esos dos valores
-    role = models.CharField(max_length=10, choices=ROLE_CHOICES)
-
-    # El texto del mensaje (TextField porque puede ser largo)
-    content = models.TextField()
-
-    # Relación muchos-a-uno con Chat:
-    # - ForeignKey: muchos mensajes pertenecen a un chat
-    # - CASCADE: si se borra el chat, se borran todos sus mensajes
-    # - related_name="messages": permite hacer chat.messages.all()
-    chat = models.ForeignKey(
+    role = models.CharField(max_length=10, choices=ROLE_CHOICES)  # quien habla
+    content = models.TextField()  # texto del mensaje
+    chat = models.ForeignKey(  # muchos mensajes pertenecen a un chat
         Chat,
-        on_delete=models.CASCADE,
-        related_name="messages",
+        on_delete=models.CASCADE,  # si se borra el chat se borran sus mensajes
+        related_name="messages",  # para poder hacer chat.messages.all()
     )
 
     def __str__(self):
