@@ -1,13 +1,13 @@
-from datetime import datetime, timedelta
-from django.utils import timezone
+from datetime import date
+from dateutil.relativedelta import relativedelta
+
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from .models import Chat, ChatMessage
-from .serializers import ChatSerializer, ChatDetailSerializer
-
+from .serializers import ChatSerializer, SendMessageSerializer
 from usage.models import Usage
 
 # TODO: ajusta este import a donde esté en tu plantilla
@@ -15,81 +15,60 @@ from usage.models import Usage
 from restApi.chat_llm import chat_llm 
 
 
+# listar todos los chats del usuario y crear uno nuevo
 class ChatListCreateView(APIView):
     permission_classes = [IsAuthenticated]
 
-    def get(self, request):
+    def get(self, request):  # devuelve todos los chats del usuario ordenados por fecha
         chats = Chat.objects.filter(user=request.user).order_by("-created_at")
         return Response(ChatSerializer(chats, many=True).data)
 
-    def post(self, request):
-        title = request.data.get("title", "New chat")
+    def post(self, request):  # crea un chat nuevo con el titulo que mande el usuario
+        title = request.data.get("title", "Nuevo chat")
         chat = Chat.objects.create(user=request.user, title=title)
         return Response(ChatSerializer(chat).data, status=status.HTTP_201_CREATED)
 
 
+# ver detalle de un chat, borrarlo o enviar un mensaje
 class ChatDetailView(APIView):
     permission_classes = [IsAuthenticated]
 
-    def get_chat(self, request, chat_id: int) -> Chat:
+    def get_chat(self, request, chat_id):  # metodo auxiliar para buscar un chat del usuario
         return Chat.objects.get(id=chat_id, user=request.user)
 
-    def get(self, request, chat_id: int):
+    def get(self, request, chat_id):  # devuelve el chat con todos sus mensajes
         chat = self.get_chat(request, chat_id)
-        return Response(ChatDetailSerializer(chat).data)
+        return Response(ChatSerializer(chat).data)
 
-    def delete(self, request, chat_id: int):
+    def delete(self, request, chat_id):  # borra el chat y todos sus mensajes en cascada
         chat = self.get_chat(request, chat_id)
         chat.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
-    def post(self, request, chat_id: int):
-        """
-        POST /api/chats/{chat_id}/
-        Envía un mensaje del usuario y devuelve la respuesta del modelo.
-        Aplica límite mensual (Usage).
-        """
+    def post(self, request, chat_id):  # envia un mensaje al llm y guarda la respuesta
         chat = self.get_chat(request, chat_id)
 
-        content = request.data.get("content")
-        if not content:
-            return Response({"content": "This field is required."}, status=status.HTTP_400_BAD_REQUEST)
+        # validamos con el serializer que tiene la logica del limite mensual
+        serializer = SendMessageSerializer(data=request.data, context={'request': request})
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-        # --- Control de uso (límite mensual) ---
-        usage = Usage.objects.get(user=request.user)
+        content = serializer.validated_data['content']
 
-        now = timezone.now()
-
-        # Ajusta nombres de campos según tu modelo Usage:
-        # - usage.messages_used
-        # - usage.messages_limit
-        # - usage.renew_date  (fecha en la que se resetea)
-        if usage.renew_date and now >= usage.renew_date:
-            usage.messages_used = 0
-            # "Dentro de un mes": aquí uso 30 días como aproximación técnica.
-            usage.renew_date = now + timedelta(days=30)
-
-        if usage.messages_used >= usage.messages_limit:
-            return Response(
-                {"detail": "Monthly message limit reached."},
-                status=status.HTTP_403_FORBIDDEN,
-            )
-
-        # Contabiliza 1 mensaje (el del usuario)
+        # sumamos 1 al contador de mensajes usados
+        usage = request.user.usage
         usage.messages_used += 1
         usage.save()
 
-        # --- Guarda mensaje del usuario ---
+        # guardamos el mensaje del usuario en la bd
         ChatMessage.objects.create(chat=chat, role="user", content=content)
 
-        # --- Llamada al LLM ---
-        # La firma exacta de chat_llm depende de vuestra plantilla.
-        # Ajusta el payload a lo que requiera tu función.
-        llm_response = chat_llm(chat_id=chat.id, user_message=content)  # <-- puede requerir cambios
+        # preparamos el historial de mensajes para el llm
+        messages = list(chat.messages.values("role", "content"))  # sacamos todos los mensajes del chat
 
-        # Si queréis persistir la respuesta del modelo:
-        # (asegura que tu modelo acepte role="assistant" o el que toque)
-        ChatMessage.objects.create(chat=chat, role="assistant", content=str(llm_response))
+        # llamamos al llm y guardamos su respuesta
+        llm_response = call_llm(messages)
+        ChatMessage.objects.create(chat=chat, role="system", content=llm_response)
 
         return Response(
             {
