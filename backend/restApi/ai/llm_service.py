@@ -16,6 +16,12 @@ SYS_PROMPT: List[Dict[str, str]] = [
     {"role": "system", "content": "Eres un asistente útil que responde en español."},
 ]
 
+def chat_llm(messages: List[Dict[str, str]]) -> str:
+    """
+
+    """
+    return call_llm(messages)
+
 
 def call_llm(messages: List[Dict[str, str]]) -> str:
     """
