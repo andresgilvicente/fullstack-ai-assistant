@@ -12,7 +12,7 @@ from usage.models import Usage
 
 # TODO: ajusta este import a donde esté en tu plantilla
 # from restApi.<RUTA_REAL> import chat_llm
-from restApi.chat_llm import chat_llm  # <-- [RELLENAR si no existe]
+from restApi.chat_llm import chat_llm 
 
 
 class ChatListCreateView(APIView):

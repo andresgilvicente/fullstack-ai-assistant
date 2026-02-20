@@ -1,6 +1,6 @@
 import re
 from datetime import date
-from dateutil.relativedelta import relativedelta
+# from dateutil.relativedelta import relativedelta
 
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
@@ -86,7 +86,7 @@ class RegisterSerializer(serializers.Serializer):
             user=user,
             messages_used=0,
             messages_limit=100,
-            reset_date=date.today() + relativedelta(months=1),  # se renueva en 1 mes
+            # reset_date=date.today() + relativedelta(months=1),  # se renueva en 1 mes
         )
 
         return user

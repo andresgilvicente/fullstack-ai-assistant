@@ -1,5 +1,5 @@
-from datetime import date
-from dateutil.relativedelta import relativedelta
+from datetime import date, timedelta
+# from dateutil.relativedelta import relativedelta
 
 from rest_framework import serializers
 from .models import Chat, ChatMessage
@@ -50,7 +50,7 @@ class SendMessageSerializer(serializers.Serializer):
 
             # ya paso la fecha de renovacion, reiniciamos el contador
             usage.messages_used = 0
-            usage.reset_date = today + relativedelta(months=1)  # nueva fecha +1 mes
+            usage.reset_date = today + timedelta(days=30)  # nueva fecha +1 mes
             usage.save()
 
         return attrs
