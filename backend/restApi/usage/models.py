@@ -6,7 +6,7 @@ from datetime import date, timedelta
 class Usage(models.Model):
     messages_used = models.IntegerField(default=0)  # mensajes enviados este mes
     messages_limit = models.IntegerField(default=100)  # maximo de mensajes al mes
-    reset_date = date.today() + timedelta(days=30)  # fecha en la que se reinicia el contador
+    reset_date = models.DateField() # fecha en la que se reinicia el contador
     user = models.OneToOneField(  # relacion 1-1 con user, si se borra el user se borra su usage
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
