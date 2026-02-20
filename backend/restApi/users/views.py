@@ -5,12 +5,16 @@ from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from .serializers import UserSerializer, RegisterSerializer, ChangePasswordSerializer
-
+from drf_spectacular.utils import extend_schema
 
 # registro de usuario, cualquiera puede acceder (AllowAny)
 class UserRegisterView(APIView):
     permission_classes = [AllowAny]
 
+    @extend_schema(
+        request=RegisterSerializer,
+        responses={201: UserSerializer},
+    )
     def post(self, request):
         serializer = RegisterSerializer(data=request.data)
         if not serializer.is_valid():  # si las validaciones fallan devuelve los errores
@@ -37,7 +41,7 @@ class UserProfileView(APIView):
         return Response(UserSerializer(request.user).data)
 
     def put(self, request):  # actualiza los datos del perfil
-        serializer = UserSerializer(request.user, data=request.data)
+        serializer = UserSerializer(request.user, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)
