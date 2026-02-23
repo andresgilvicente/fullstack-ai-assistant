@@ -4,14 +4,6 @@ from typing import List, Dict
 OLLAMA_HOST = "http://localhost:11434"
 MODEL = "llama3.2:3b"  # modelo configurado desde Ollama Web UI
 
-# Ejemplo de la variable mensajes:
-# msgs: List[Dict[str, str]] = [
-# {"role": "system", "content": "Eres un asistente útil que responde en español."},
-# {"role": "user", "content": "Explícame qué es Docker en pocas líneas."},
-# ]
-#
-#
-
 SYS_PROMPT: List[Dict[str, str]] = [
     {"role": "system", "content": "Eres un asistente útil que responde en español."},
 ]

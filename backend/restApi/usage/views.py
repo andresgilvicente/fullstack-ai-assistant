@@ -11,5 +11,5 @@ class UsageView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        usage = Usage.objects.get(user=request.user)  # pillamos el registro de uso del usuario
+        usage, created = Usage.objects.get_or_create(user=request.user)  # pillamos el registro de uso del usuario
         return Response(UsageSerializer(usage).data)

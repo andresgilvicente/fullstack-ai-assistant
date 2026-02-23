@@ -30,27 +30,26 @@ class SendMessageSerializer(serializers.Serializer):
     content = serializers.CharField()  # el texto que manda el usuario
 
     def validate(self, attrs):
-        user = self.context['request'].user  # usuario autenticado con jwt
-
+        user = self.context['request'].user
+ 
         try:
-            usage = user.usage  # registro de uso del usuario (relacion 1-1)
+            usage = user.usage
         except Exception:
-            raise serializers.ValidationError(
-                "No se encontró el registro de uso para este usuario."
-            )
-
+            raise serializers.ValidationError("No se encontró el registro de uso para este usuario.")
+ 
         today = date.today()
-
-        if usage.messages_used >= usage.messages_limit:  # ha llegado al limite
-            if today < usage.reset_date:  # todavia no toca renovar, se bloquea
-                raise serializers.ValidationError(
-                    f"Has alcanzado tu límite de {usage.messages_limit} mensajes mensuales. "
-                    f"Tu límite se renueva el {usage.reset_date}."
-                )
-
-            # ya paso la fecha de renovacion, reiniciamos el contador
+ 
+        # 1. PRIMERO comprobamos si toca renovar (independientemente de lo que haya gastado)
+        if today >= usage.reset_date:
             usage.messages_used = 0
-            usage.reset_date = today + timedelta(days=30)  # nueva fecha +1 mes
+            usage.reset_date = today + timedelta(days=30)
             usage.save()
-
+ 
+        # 2. DESPUÉS comprobamos si ha llegado al límite
+        if usage.messages_used >= usage.messages_limit:
+            raise serializers.ValidationError(
+                f"Has alcanzado tu límite de {usage.messages_limit} mensajes mensuales. "
+                f"Tu límite se renueva el {usage.reset_date}."
+            )
+ 
         return attrs

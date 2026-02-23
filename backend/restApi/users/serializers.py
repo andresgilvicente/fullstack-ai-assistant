@@ -87,6 +87,13 @@ class UserSerializer(serializers.ModelSerializer):
         fields = ["id", "username", "email", "first_name", "last_name"]
         read_only_fields = ["id", "username"]
 
+    def validate_email(self, value):
+        # Obtenemos el usuario que está haciendo la petición
+        user = self.context['request'].user
+        # Comprobamos si el nuevo email ya existe, EXCLUYENDO al propio usuario
+        if User.objects.exclude(pk=user.pk).filter(email=value).exists():
+            raise serializers.ValidationError("Este email ya está siendo utilizado por otra cuenta.")
+        return value
 
 class ChangePasswordSerializer(serializers.Serializer):
     old_password = serializers.CharField(write_only=True)

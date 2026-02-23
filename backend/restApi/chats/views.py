@@ -4,6 +4,7 @@ from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from django.shortcuts import get_object_or_404
 
 from .models import Chat, ChatMessage
 from .serializers import ChatSerializer, SendMessageSerializer
@@ -27,7 +28,7 @@ class ChatDetailView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get_chat(self, request, chat_id):
-        return Chat.objects.get(id=chat_id, user=request.user)
+        return Chat.objects.get_object_or_404(id=chat_id, user=request.user)
 
     def get(self, request, chat_id):
         chat = self.get_chat(request, chat_id)
@@ -47,13 +48,13 @@ class ChatDetailView(APIView):
 
         content = serializer.validated_data['content']
 
-        # incrementa uso (el serializer ya hizo el control de límite y reset)
+        # guarda mensaje usuario
+        ChatMessage.objects.create(chat=chat, role="user", content=content)
+
+         # incrementa uso (el serializer ya hizo el control de límite y reset)
         usage = request.user.usage
         usage.messages_used += 1
         usage.save()
- 
-        # guarda mensaje usuario
-        ChatMessage.objects.create(chat=chat, role="user", content=content)
 
         # historial: requiere que related_name en ChatMessage sea "messages"
         messages = list(chat.messages.values("role", "content"))
@@ -71,6 +72,20 @@ class ChatDetailView(APIView):
             },
             status=status.HTTP_200_OK,
         )
+    
+
+
+
+
+    ##############################################
+        ##############################################
+            ##############################################
+                ##############################################
+                    ##############################################
+                        ##############################################
+                            ##############################################
+                                ##############################################
+
     
 
 
