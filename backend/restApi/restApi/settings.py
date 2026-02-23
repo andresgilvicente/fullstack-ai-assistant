@@ -53,6 +53,7 @@ INSTALLED_APPS = [
     "users",
     "usage",
     "chats",
+    'drf_spectacular.openapi.AutoSchema',
 ]
 
 MIDDLEWARE = [

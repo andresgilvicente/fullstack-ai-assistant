@@ -26,7 +26,7 @@ class Chat(models.Model):
 class ChatMessage(models.Model):
     ROLE_CHOICES = [
         ("user", "user"),  # mensaje del usuario
-        ("assitant", "assitant"),  # respuesta de la ia
+        ("assistant", "assistant"),  # respuesta de la ia
     ]
 
     role = models.CharField(max_length=10, choices=ROLE_CHOICES)  # quien habla

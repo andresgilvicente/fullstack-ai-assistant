@@ -26,6 +26,7 @@ class ChatSerializer(serializers.ModelSerializer):
 # serializer para enviar un mensaje, aqui va la logica del limite mensual
 # reglas: si supera el limite y no toca renovar se bloquea
 #         si supera el limite pero ya paso la fecha de renovacion se renueva y deja enviar
+
 class SendMessageSerializer(serializers.Serializer):
     content = serializers.CharField()  # el texto que manda el usuario
 
@@ -53,3 +54,9 @@ class SendMessageSerializer(serializers.Serializer):
             )
  
         return attrs
+
+class SendMessageResponseSerializer(serializers.Serializer):
+    chat_id = serializers.IntegerField()
+    user_message = serializers.CharField()
+    assistant_message = serializers.CharField()
+
