@@ -51,7 +51,7 @@ class ChatDetailView(APIView):
         usage = request.user.usage
         usage.messages_used += 1
         usage.save()
-
+ 
         # guarda mensaje usuario
         ChatMessage.objects.create(chat=chat, role="user", content=content)
 
