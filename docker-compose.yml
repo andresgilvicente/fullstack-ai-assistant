@@ -40,6 +40,8 @@ services:
       context: ./backend
       dockerfile: Dockerfile
     container_name: backend-das
+    volumes:
+      - ./backend:/app  # <--- ¡ESTA ES LA LÍNEA MÁGICA!
     ports:
       - "8000:8000"
     environment:
@@ -59,9 +61,7 @@ services:
         condition: service_started
     restart: unless-stopped
     networks:
-      # - ollama-docker
-    volumes:
-      -./restApi:/app/restApi
+      - ollama-docker
 
   ollama:
     image: docker.io/ollama/ollama:latest
