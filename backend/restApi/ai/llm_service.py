@@ -1,7 +1,10 @@
+import os
+
 import ollama
 from typing import List, Dict
-
-OLLAMA_HOST = "http://localhost:11434"
+    
+# OLLAMA_HOST = "http://localhost:11434"
+OLLAMA_HOST = os.environ.get("OLLAMA_HOST", "http://ollama:11434")
 MODEL = "llama3.2:3b"  # modelo configurado desde Ollama Web UI
 
 SYS_PROMPT: List[Dict[str, str]] = [
