@@ -1,9 +1,10 @@
-from datetime import date, timedelta
+from datetime import date, timedelta, datetime, UTC
 # from dateutil.relativedelta import relativedelta
 
 from rest_framework import serializers
 from .models import Chat, ChatMessage
-
+from django.utils import timezone
+from usage.models import Usage 
 
 # serializer para los mensajes dentro de un chat
 class ChatMessageSerializer(serializers.ModelSerializer):
@@ -43,7 +44,7 @@ class SendMessageSerializer(serializers.Serializer):
         except Exception:
             raise serializers.ValidationError("No se encontró el registro de uso para este usuario.")
 
-        now = timezone.now()
+        now = datetime.now(UTC)
 
         # Si reset_date es NULL o está en el pasado, resetea
         if usage.reset_date is None or now >= usage.reset_date:
@@ -65,3 +66,16 @@ class SendMessageResponseSerializer(serializers.Serializer):
     user_message = serializers.CharField()
     assistant_message = serializers.CharField()
 
+
+
+
+
+
+
+
+
+
+
+
+
+######################3

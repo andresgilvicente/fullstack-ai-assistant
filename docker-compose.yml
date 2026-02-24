@@ -59,7 +59,9 @@ services:
         condition: service_started
     restart: unless-stopped
     networks:
-      - ollama-docker
+      # - ollama-docker
+    volumes:
+      -./restApi:/app/restApi
 
   ollama:
     image: docker.io/ollama/ollama:latest
