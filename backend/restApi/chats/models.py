@@ -11,6 +11,7 @@ class Chat(models.Model):
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,  # si se borra el usuario se borran sus chats
         related_name="chats",  # para poder hacer user.chats.all()
+        # el chat siempre tiene asociado un usuario, por lo que este campo sí es obligatorio
     )
 
     def __str__(self):

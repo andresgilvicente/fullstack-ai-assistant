@@ -19,6 +19,8 @@ class Usage(models.Model):
 
     def __str__(self):
         return f"Usage de {self.user.username}: {self.messages_used}/{self.messages_limit}"
+    
+    
 
     class Meta:
         verbose_name = "Uso"

@@ -28,31 +28,36 @@ class ChatSerializer(serializers.ModelSerializer):
 #         si supera el limite pero ya paso la fecha de renovacion se renueva y deja enviar
 
 class SendMessageSerializer(serializers.Serializer):
-    content = serializers.CharField()  # el texto que manda el usuario
+    content = serializers.CharField()
 
     def validate(self, attrs):
-        user = self.context['request'].user
- 
+        request = self.context.get("request")
+        user = getattr(request, "user", None)
+
+        if user is None or not user.is_authenticated:
+            raise serializers.ValidationError("Usuario no autenticado.")
+
+        # usage 1-1
         try:
             usage = user.usage
         except Exception:
             raise serializers.ValidationError("No se encontró el registro de uso para este usuario.")
- 
-        today = date.today()
- 
-        # 1. PRIMERO comprobamos si toca renovar (independientemente de lo que haya gastado)
-        if today >= usage.reset_date:
+
+        now = timezone.now()
+
+        # Si reset_date es NULL o está en el pasado, resetea
+        if usage.reset_date is None or now >= usage.reset_date:
             usage.messages_used = 0
-            usage.reset_date = today + timedelta(days=30)
-            usage.save()
- 
-        # 2. DESPUÉS comprobamos si ha llegado al límite
+            usage.reset_date = now + timedelta(days=30)
+            usage.save(update_fields=["messages_used", "reset_date"])
+
+        # Límite
         if usage.messages_used >= usage.messages_limit:
             raise serializers.ValidationError(
                 f"Has alcanzado tu límite de {usage.messages_limit} mensajes mensuales. "
                 f"Tu límite se renueva el {usage.reset_date}."
             )
- 
+
         return attrs
 
 class SendMessageResponseSerializer(serializers.Serializer):
