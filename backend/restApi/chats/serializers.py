@@ -46,10 +46,13 @@ class SendMessageSerializer(serializers.Serializer):
 
         now = datetime.now(UTC)
 
-        # Si reset_date es NULL o está en el pasado, resetea
-        if usage.reset_date is None or now >= usage.reset_date:
+        today = now.date()  # Extraemos solo la fecha (año-mes-día)
+
+        # Usamos 'today' en la comparación en lugar de 'now'
+        if usage.reset_date is None or today >= usage.reset_date:
             usage.messages_used = 0
-            usage.reset_date = now + timedelta(days=30)
+            # IMPORTANTE: Cambiamos timedelta(days=30) para sumarlo a 'today'
+            usage.reset_date = today + timedelta(days=30) 
             usage.save(update_fields=["messages_used", "reset_date"])
 
         # Límite
