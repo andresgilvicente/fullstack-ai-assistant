@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Iniciar Sesion</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header class="header">
+        
+        <div class="site-nav">
+            <a href="login.html" class="active">Iniciar Sesion</a>
+            <a href="register.html">Registro</a>
+        </div>
+    </header>
+
+    <main class="content">
+        <section class="card">
+            <h1>Iniciar Sesion</h1>
+
+            <div id="errors"></div>
+
+            <form id="login-form" action="#" method="POST">
+                <div class="form-field">
+                    <label for="username">Usuario:</label>
+                    <input type="text" id="username" name="username" required>
+                </div>
+
+                <div class="form-field">
+                    <label for="password">Password:</label>
+                    <input type="password" id="password" name="password" required>
+                </div>
+
+                <button type="submit">Entrar</button>
+            </form>
+
+            <p class="form-footer">No tienes cuenta? <a href="register.html">Registrate aqui</a></p>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <p>Agile But Fragile</p>
+    </footer>
+    <script src="script.js" defer></script>
+</body>
+</html>
