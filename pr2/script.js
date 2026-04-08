@@ -4,7 +4,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const loginForm = document.getElementById('login-form');
     const registerForm = document.getElementById('register-form');
     const errorsDiv = document.getElementById('errors');
-    
+
     if (loginForm) {
         loginForm.addEventListener('submit', async (event) => {
             event.preventDefault();
@@ -15,7 +15,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             try {
 
-                const response = await fetch('/api/auth/login/', { 
+                const response = await fetch('http://localhost:8000/api/auth/login/', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -30,13 +30,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
 
                 const data = await response.json();
-                const token = data.access; 
+                const token = data.access;
 
                 localStorage.setItem('authToken', token);
 
                 console.log('Token guardado:', token);
                 alert('Inicio de sesión exitoso. Redirigiendo...');
-                
+
 
             } catch (error) {
 
@@ -68,7 +68,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             try {
-                const response = await fetch('/api/users/register/', {
+                const response = await fetch('http://localhost:8000/api/users/register/', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -86,9 +86,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (errorData.password) errorMessage += ` Contraseña: ${errorData.password.join(' ')}`;
                     throw new Error(errorMessage);
                 }
-                
+
                 alert('¡Registro completado con éxito! Ahora puedes iniciar sesión.');
-                
+
                 window.location.href = 'login.html';
 
             } catch (error) {
