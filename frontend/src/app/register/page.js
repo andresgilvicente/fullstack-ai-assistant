@@ -61,7 +61,6 @@ export default function Register() {
             router.push("/login");
         } catch (err) {
             console.error(err);
-            setError("Error al registrar. Por favor, intente nuevamente.");
         }
     };
 

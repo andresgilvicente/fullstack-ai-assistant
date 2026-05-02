@@ -7,8 +7,24 @@ import { getUsage, getChats, createChat, deleteChat } from "../../services/api";
 export default function Dashboard() {
     const router = useRouter();
     const [chats, setChats] = useState([]);
+    const [searchTerm, setSearchTerm] = useState("");
     const [usage, setUsage] = useState(null);
     const [loading, setLoading] = useState(true);
+
+    const normalizedSearch = searchTerm.trim().toLowerCase();
+    const filteredChats = chats.filter((chat) => {
+        if (!normalizedSearch) {
+            return true;
+        }
+
+        const chatName = (chat.title || `Chat #${chat.id}`).toLowerCase();
+        const titleMatches = chatName.includes(normalizedSearch);
+        const contentMatches = (chat.messages || []).some((message) =>
+            (message.content || "").toLowerCase().includes(normalizedSearch)
+        );
+
+        return titleMatches || contentMatches;
+    });
 
     useEffect(() => {
         // Check if accessToken exists in localStorage
@@ -83,11 +99,22 @@ export default function Dashboard() {
                 </button>
             </div>
 
+            <div className="form-group mb-1">
+                <input
+                    type="text"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    placeholder="Buscar por nombre o contenido..."
+                />
+            </div>
+
             {chats.length === 0 ? (
                 <p>No tienes chats aún. ¡Crea uno para empezar!</p>
+            ) : filteredChats.length === 0 ? (
+                <p>No se han encontrado chats para esa búsqueda.</p>
             ) : (
                 <div className="chat-list">
-                    {chats.map(chat => (
+                    {filteredChats.map(chat => (
                         <div key={chat.id} className="chat-list-item">
                             <div>
                                 {/* Cambiamos chat.name por chat.title */}
