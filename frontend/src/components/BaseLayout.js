@@ -1,16 +1,14 @@
 import React from "react";
 import styles from "./BaseLayout.module.css";
+import Header from "./Header";
+import Footer from "./Footer";
 
 export default function BaseLayout({ children }) {
   return (
     <div className={styles.layoutContainer}>
-      <header className={styles.header}>
-        <h1>Agil But Fragile - LLM</h1>
-      </header>
+      <Header />
       <main className={styles.content}>{children}</main>
-      <footer className={styles.footer}>
-        <p>&copy; 2026 Agile But Fragile</p>
-      </footer>
+      <Footer />
     </div>
   );
 }

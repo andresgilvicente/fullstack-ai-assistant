@@ -7,6 +7,27 @@
   --bot-msg-bg: #e1f5fe;
   --user-msg-bg: #dcedc8;
   --danger-color: #ff4d4f;
+  --card-bg: #ffffff;
+  --input-bg: #ffffff;
+  --muted-text: #666;
+  --hover-primary: #005bb5;
+  --danger-hover: #cc0000;
+}
+
+[data-theme="dark"] {
+  --bg-color: #111827;
+  --text-color: #f3f4f6;
+  --primary-color: #60a5fa;
+  --header-bg: #1f2937;
+  --border-color: #374151;
+  --bot-msg-bg: #1e3a5f;
+  --user-msg-bg: #35524a;
+  --danger-color: #f87171;
+  --card-bg: #1f2937;
+  --input-bg: #111827;
+  --muted-text: #9ca3af;
+  --hover-primary: #3b82f6;
+  --danger-hover: #ef4444;
 }
 
 * {
@@ -33,7 +54,17 @@ body {
   align-items: center;
 }
 
-.layout-header nav a, .layout-header nav button {
+.layout-header h2 {
+  color: var(--text-color);
+}
+
+.layout-header h2 a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.layout-header nav a,
+.layout-header nav button {
   margin-left: 1rem;
   text-decoration: none;
   color: var(--primary-color);
@@ -57,14 +88,14 @@ body {
   border-top: 1px solid var(--border-color);
   background-color: var(--header-bg);
   font-size: 0.9rem;
-  color: #666;
+  color: var(--muted-text);
 }
 
 .card {
-  background: white;
+  background: var(--card-bg);
   padding: 2rem;
   border-radius: 8px;
-  box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
 }
 
 .form-group {
@@ -80,8 +111,10 @@ body {
 
 .form-group input {
   padding: 0.75rem;
-  border: 1px solid #ccc;
+  border: 1px solid var(--border-color);
   border-radius: 4px;
+  background-color: var(--input-bg);
+  color: var(--text-color);
 }
 
 .btn {
@@ -96,14 +129,15 @@ body {
 }
 
 .btn:hover {
-  background-color: #005bb5;
+  background-color: var(--hover-primary);
 }
 
 .btn-danger {
   background-color: var(--danger-color);
 }
+
 .btn-danger:hover {
-  background-color: #cc0000;
+  background-color: var(--danger-hover);
 }
 
 .error-text {
@@ -159,7 +193,7 @@ body {
 }
 
 .text-success {
-  color: green;
+  color: #22c55e;
 }
 
 .primary-link {
@@ -167,7 +201,7 @@ body {
 }
 
 .help-text {
-  color: #666;
+  color: var(--muted-text);
   font-size: 0.8rem;
   margin-top: 4px;
 }
@@ -192,7 +226,11 @@ body {
 
 .chat-date {
   font-size: 0.8rem;
-  color: #666;
+  color: var(--muted-text);
+}
+
+.chat-title {
+  color: #000;
 }
 
 .chat-actions {
@@ -207,7 +245,7 @@ body {
 .chat-top-bar {
   padding: 1rem;
   border-bottom: 1px solid var(--border-color);
-  background: #fff;
+  background: var(--card-bg);
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -219,7 +257,7 @@ body {
 }
 
 .msg-pending {
-  color: #666;
+  color: var(--muted-text);
   margin-top: 0.25rem;
 }
 
@@ -230,12 +268,13 @@ body {
   max-width: 600px;
   margin: 0 auto;
 }
+
 .chat-container {
   display: flex;
   flex-direction: column;
   height: 60vh;
   border: 1px solid var(--border-color);
-  background: white;
+  background: var(--card-bg);
   border-radius: 8px;
   overflow: hidden;
 }

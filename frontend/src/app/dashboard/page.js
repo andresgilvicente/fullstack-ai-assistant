@@ -78,9 +78,6 @@ export default function Dashboard() {
 
             <div className="dashboard-header">
                 <h2>Tus Chats</h2>
-                <button onClick={() => router.push('/profile')} className="btn btn-secondary">
-                    Ir al Perfil
-                </button>
                 <button onClick={handleCreateChat} className="btn">
                     + Crear nuevo chat
                 </button>
@@ -94,7 +91,7 @@ export default function Dashboard() {
                         <div key={chat.id} className="chat-list-item">
                             <div>
                                 {/* Cambiamos chat.name por chat.title */}
-                                <strong>{chat.title || `Chat #${chat.id}`}</strong>
+                                <strong className="chat-title">{chat.title || `Chat #${chat.id}`}</strong>
 
                                 <p className="chat-date">
 

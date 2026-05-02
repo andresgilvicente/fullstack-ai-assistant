@@ -1,6 +1,8 @@
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import BaseLayout from "../components/BaseLayout";
+import { ThemeProvider } from "../context/ThemeContext";
+import { AuthProvider } from "../context/AuthContext";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -17,15 +19,15 @@ export const metadata = {
   description: "Proyecto desarrollado para la asignatura de DAS 2026 por Jorge Carnicero Príncipe y Andrés Gil Vicente",
 };
 
-import { AuthProvider } from "../context/AuthContext";
-
 export default function RootLayout({ children }) {
   return (
     <html lang="es">
       <body className={`${geistSans.variable} ${geistMono.variable}`}>
-        <AuthProvider>
-          <BaseLayout>{children}</BaseLayout>
-        </AuthProvider>
+        <ThemeProvider>
+          <AuthProvider>
+            <BaseLayout>{children}</BaseLayout>
+          </AuthProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

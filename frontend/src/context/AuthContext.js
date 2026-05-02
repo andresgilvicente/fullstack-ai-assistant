@@ -1,22 +1,22 @@
 "use client";
-import { createContext, useState, useEffect } from "react";
+import { createContext, useState } from "react";
 
 export const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
-    const [authState, setAuthState] = useState({
-        token: null,
-        user: null,
-    });
+    const [authState, setAuthState] = useState(() => {
+        if (typeof window === "undefined") {
+            return { token: null, user: null };
+        }
 
-    // Initialize authState from localStorage
-    useEffect(() => {
         const token = localStorage.getItem("accessToken");
         const user = localStorage.getItem("user");
-        if (token) {
-            setAuthState({ token, user: user ? JSON.parse(user) : null });
-        }
-    }, []);
+
+        return {
+            token,
+            user: user ? JSON.parse(user) : null,
+        };
+    });
 
     const login = (token, user) => {
         localStorage.setItem("accessToken", token);

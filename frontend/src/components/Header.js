@@ -1,36 +1,43 @@
 "use client";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
-import { logout } from "../services/api";
+import { useContext, useEffect, useState } from "react";
+import { AuthContext } from "../context/AuthContext";
+import { ThemeContext } from "../context/ThemeContext";
+import { logout as logoutRequest } from "../services/api";
 
 export default function Header() {
   const router = useRouter();
-  const [isLogged, setIsLogged] = useState(false);
+  const { token, logout } = useContext(AuthContext);
+  const { theme, toggleTheme } = useContext(ThemeContext);
+  const [mounted, setMounted] = useState(false);
+  const isLogged = mounted && !!token;
 
   useEffect(() => {
-    setIsLogged(!!localStorage.getItem("accessToken"));
+    setMounted(true);
   }, []);
 
   const handleLogout = async () => {
     const refreshToken = localStorage.getItem("refreshToken");
     if (refreshToken) {
       try {
-        await logout(refreshToken);
+        await logoutRequest(refreshToken);
       } catch (e) {
         console.error("Logout failed", e);
       }
     }
-    localStorage.removeItem("accessToken");
     localStorage.removeItem("refreshToken");
-    setIsLogged(false);
+    logout();
     router.push("/login");
   };
 
   return (
     <header className="layout-header">
-      <h2><Link href={isLogged ? "/dashboard" : "/"}>Mi App Chat</Link></h2>
+      <h2><Link href={isLogged ? "/dashboard" : "/"}>Agil But Fragile - LLM</Link></h2>
       <nav>
+        <button onClick={toggleTheme} type="button">
+          {mounted && theme === "dark" ? "Modo claro" : "Modo oscuro"}
+        </button>
         {isLogged ? (
           <>
             <Link href="/dashboard">Dashboard</Link>
