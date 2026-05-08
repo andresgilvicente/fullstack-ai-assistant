@@ -1,0 +1,13 @@
+/*
+  igual que en dashboard este css local del chat esta vacio ahora mismo
+  toda la pinta del chat sale sobre todo de globals.css con clases como
+  .chat-container
+  .chat-top-bar
+  .chat-messages
+  .message.user
+  .message.llm
+  .chat-input
+
+  si quisieramos cambiar solo la pantalla del chat sin tocar el resto de la web
+  este seria un buen sitio para empezar a separar estilos propios
+*/
