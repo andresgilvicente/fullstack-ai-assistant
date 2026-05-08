@@ -51,7 +51,9 @@ class RegisterSerializer(serializers.Serializer):
         password2 = attrs.get("password2")
 
         if password != password2:
-            raise serializers.ValidationError({"password2": "Las contraseñas no coinciden."})
+            raise serializers.ValidationError(
+                {"password2": "Las contraseñas no coinciden."}
+            )
 
         password_errors = validate_password_strength(password)
         if password_errors:
@@ -85,15 +87,24 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ["id", "username", "email", "first_name", "last_name"]
-        read_only_fields = ["id", "username"]
+        read_only_fields = ["id"]
+
+    def validate_username(self, value):
+        user = self.context["request"].user
+        if User.objects.exclude(pk=user.pk).filter(username=value).exists():
+            raise serializers.ValidationError("Este nombre de usuario ya está en uso.")
+        return value
 
     def validate_email(self, value):
         # Obtenemos el usuario que está haciendo la petición
-        user = self.context['request'].user
+        user = self.context["request"].user
         # Comprobamos si el nuevo email ya existe, EXCLUYENDO al propio usuario
         if User.objects.exclude(pk=user.pk).filter(email=value).exists():
-            raise serializers.ValidationError("Este email ya está siendo utilizado por otra cuenta.")
+            raise serializers.ValidationError(
+                "Este email ya está siendo utilizado por otra cuenta."
+            )
         return value
+
 
 class ChangePasswordSerializer(serializers.Serializer):
     old_password = serializers.CharField(write_only=True)
@@ -111,7 +122,9 @@ class ChangePasswordSerializer(serializers.Serializer):
         password2 = attrs.get("password2")
 
         if password != password2:
-            raise serializers.ValidationError({"password2": "Las contraseñas no coinciden."})
+            raise serializers.ValidationError(
+                {"password2": "Las contraseñas no coinciden."}
+            )
 
         password_errors = validate_password_strength(password)
         if password_errors:

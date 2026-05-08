@@ -1,0 +1,22 @@
+.layoutContainer {
+  /*
+    este es el esqueleto vertical de toda la web
+    aqui hacemos que header contenido y footer se apilen de arriba a abajo
+    si algun dia vieramos el footer flotando raro o el contenido cortado mirariamos esta clase de primeras
+  */
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.content {
+  /*
+    esta es la zona central variable de la pagina o sea donde de verdad cambia
+    login dashboard chat perfil etc
+    con flex 1 hacemos que ocupe todo el hueco libre entre header y footer
+    si quisieramos meter mas aire lateral o cambiar el fondo general del contenido tocariamos aqui
+  */
+  flex: 1;
+  padding: 1rem;
+  background-color: var(--bg-color);
+}
