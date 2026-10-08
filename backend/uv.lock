@@ -51,7 +51,7 @@ wheels = [
 ]
 
 [[package]]
-name = "backend-das"
+name = "ai-chat-assistant-backend"
 version = "0.1.0"
 source = { virtual = "." }
 dependencies = [

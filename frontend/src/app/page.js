@@ -2,29 +2,19 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 
+// The root route renders nothing of its own: it only redirects the visitor
+// to the dashboard or to the login page depending on the stored session.
 export default function Home() {
-  // esta ruta raiz no enseña nada real, solo decide a donde mandamos al usuario
   const router = useRouter();
 
   useEffect(() => {
-    // aqui miramos si en localstorage ya tenemos el accesstoken guardado
-    // si quisieramos cambiar como persistimos la sesion habria que mirar
-    // este fichero y tambien authcontext
     const token = localStorage.getItem("accessToken");
-
-    if (token) {
-      // si ya habia sesion mandamos al dashboard
-      router.push("/dashboard");
-    } else {
-      // si no hay sesion empezamos por login
-      router.push("/login");
-    }
+    router.push(token ? "/dashboard" : "/login");
   }, [router]);
 
   return (
     <div>
-      {/* mientras decidimos la redireccion enseñamos algo minimo */}
-      <p>Cargando...</p>
+      <p>Loading...</p>
     </div>
   );
 }

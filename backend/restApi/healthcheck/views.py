@@ -6,7 +6,7 @@ from rest_framework.views import APIView
 class HealthcheckView(APIView):
     @extend_schema(
         description="Healthcheck endpoint",
-        responses={200: "API is running"},
+        responses={200: str},
     )
     def get(self, request):
-        return Response("Greetings from API Chat AI (DAS 2026)")
+        return Response("AI Chat Assistant API is running")

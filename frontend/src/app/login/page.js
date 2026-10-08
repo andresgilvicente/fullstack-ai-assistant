@@ -1,61 +1,44 @@
 "use client";
 import React, { useState, useContext } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { AuthContext } from "../../context/AuthContext";
 import { login } from "../../services/api";
-import styles from "./page.module.css";
 
 export default function Login() {
-  // en esta pagina controlamos el acceso a la aplicacion
-  // si nos piden cambiar el flujo de inicio de sesion este es el primer sitio
   const router = useRouter();
-
-  // reutilizamos la funcion login del contexto para guardar la sesion global
   const { login: loginContext } = useContext(AuthContext);
 
-  // estados locales del formulario
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
 
   const handleSubmit = async (e) => {
-  // aqui paramos el submit normal para controlar nosotros la peticion desde react
-  e.preventDefault();
-  console.log("Submitting login request to /api/auth/login/ with:", { username, password });
+    e.preventDefault();
     setError("");
 
-    // validacion minima de campos antes de ir al backend
     if (!username || !password) {
-      setError("Por favor, complete todos los campos.");
+      setError("Please fill in all fields.");
       return;
     }
 
     try {
-      // llamamos al backend desde services/api.js
       const data = await login(username, password);
-      console.log("Login successful:", data);
-
-      // guardamos el access token y el usuario en el contexto global
-      // si quisieramos guardar mas datos de sesion se cambiaria aqui y en authcontext
-      loginContext(data.access, { username });
-
-      // despues de logarnos el flujo normal de la practica nos lleva al dashboard
+      loginContext(data.access, { username }, data.refresh);
       router.push("/dashboard");
     } catch (err) {
-      console.error("Login error details:", err);
-      // si el backend rechaza el login damos un mensaje simple para el usuario
-      setError("Usuario o contraseña incorrectos.");
+      console.error("Login failed", err);
+      setError("Incorrect username or password.");
     }
   };
 
   return (
     <div className="card auth-card">
-      <h1 className="auth-title">Iniciar Sesión</h1>
-      {/* si hubo error lo mostramos encima del formulario */}
+      <h1 className="auth-title">Sign in</h1>
       {error && <p className="error-text mb-1">{error}</p>}
       <form onSubmit={handleSubmit}>
         <div className="form-group">
-          <label htmlFor="username">Usuario:</label>
+          <label htmlFor="username">Username</label>
           <input
             type="text"
             id="username"
@@ -65,7 +48,7 @@ export default function Login() {
           />
         </div>
         <div className="form-group">
-          <label htmlFor="password">Contraseña:</label>
+          <label htmlFor="password">Password</label>
           <input
             type="password"
             id="password"
@@ -74,12 +57,16 @@ export default function Login() {
             required
           />
         </div>
-        <button type="submit" className="btn w-100 mt-1">Iniciar Sesión</button>
+        <button type="submit" className="btn w-100 mt-1">
+          Sign in
+        </button>
       </form>
-      {/* dejamos una salida rapida al registro por si el usuario no tiene cuenta */}
-<p className="mt-1 text-center">
-  ¿No tienes cuenta? <a href="/register" className="primary-link">Regístrate aquí</a>
-</p>
+      <p className="mt-1 text-center">
+        Don&apos;t have an account?{" "}
+        <Link href="/register" className="primary-link">
+          Register
+        </Link>
+      </p>
     </div>
   );
 }

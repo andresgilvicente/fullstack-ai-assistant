@@ -1,26 +1,46 @@
 import re
 from datetime import date, timedelta
 
-from rest_framework import serializers
 from django.contrib.auth import get_user_model
+from rest_framework import serializers
+
 from usage.models import Usage
 
 User = get_user_model()
 
+DEFAULT_MESSAGES_LIMIT = 100
+USAGE_RESET_PERIOD = timedelta(days=30)
 
-def validate_password_strength(password: str):
+
+def validate_password_strength(password: str) -> list[str]:
+    """Return the list of password policy violations (empty if the password is valid)."""
     errors = []
 
-    if len(password) <= 8:
-        errors.append("La contraseña debe tener más de 8 caracteres.")
+    if len(password) < 8:
+        errors.append("The password must be at least 8 characters long.")
 
     if not re.search(r"[A-Z]", password):
-        errors.append("La contraseña debe incluir al menos una letra mayúscula.")
+        errors.append("The password must include at least one uppercase letter.")
 
     if not re.search(r"[a-z]", password):
-        errors.append("La contraseña debe incluir al menos una letra minúscula.")
+        errors.append("The password must include at least one lowercase letter.")
+
+    if not re.search(r"\d", password):
+        errors.append("The password must include at least one number.")
 
     return errors
+
+
+def validate_matching_passwords(attrs):
+    """Shared validation for serializers that take a password and its confirmation."""
+    if attrs.get("password") != attrs.get("password2"):
+        raise serializers.ValidationError({"password2": "The passwords do not match."})
+
+    password_errors = validate_password_strength(attrs.get("password"))
+    if password_errors:
+        raise serializers.ValidationError({"password": password_errors})
+
+    return attrs
 
 
 class RegisterSerializer(serializers.Serializer):
@@ -33,33 +53,20 @@ class RegisterSerializer(serializers.Serializer):
 
     def validate_username(self, value):
         if User.objects.filter(username=value).exists():
-            raise serializers.ValidationError("Este nombre de usuario ya está en uso.")
+            raise serializers.ValidationError("This username is already taken.")
         return value
 
     def validate_email(self, value):
-        email_regex = r"^[^@]+@[^@]+\.[a-zA-Z]{2,}$"
-        if not re.match(email_regex, value):
+        if not re.match(r"^[^@]+@[^@]+\.[a-zA-Z]{2,}$", value):
             raise serializers.ValidationError(
-                "El email debe tener un formato válido (ejemplo: usuario@dominio.com)."
+                "Enter a valid email address (for example: user@domain.com)."
             )
         if User.objects.filter(email=value).exists():
-            raise serializers.ValidationError("Este email ya está registrado.")
+            raise serializers.ValidationError("This email is already registered.")
         return value
 
     def validate(self, attrs):
-        password = attrs.get("password")
-        password2 = attrs.get("password2")
-
-        if password != password2:
-            raise serializers.ValidationError(
-                {"password2": "Las contraseñas no coinciden."}
-            )
-
-        password_errors = validate_password_strength(password)
-        if password_errors:
-            raise serializers.ValidationError({"password": password_errors})
-
-        return attrs
+        return validate_matching_passwords(attrs)
 
     def create(self, validated_data):
         validated_data.pop("password2")
@@ -72,12 +79,11 @@ class RegisterSerializer(serializers.Serializer):
             last_name=validated_data.get("last_name", ""),
         )
 
-        # TU MODELO Usage exige reset_date (NOT NULL)
         Usage.objects.create(
             user=user,
             messages_used=0,
-            messages_limit=100,
-            reset_date=date.today() + timedelta(days=30),
+            messages_limit=DEFAULT_MESSAGES_LIMIT,
+            reset_date=date.today() + USAGE_RESET_PERIOD,
         )
 
         return user
@@ -92,17 +98,14 @@ class UserSerializer(serializers.ModelSerializer):
     def validate_username(self, value):
         user = self.context["request"].user
         if User.objects.exclude(pk=user.pk).filter(username=value).exists():
-            raise serializers.ValidationError("Este nombre de usuario ya está en uso.")
+            raise serializers.ValidationError("This username is already taken.")
         return value
 
     def validate_email(self, value):
-        # Obtenemos el usuario que está haciendo la petición
+        # Exclude the requesting user so that keeping the same email is allowed.
         user = self.context["request"].user
-        # Comprobamos si el nuevo email ya existe, EXCLUYENDO al propio usuario
         if User.objects.exclude(pk=user.pk).filter(email=value).exists():
-            raise serializers.ValidationError(
-                "Este email ya está siendo utilizado por otra cuenta."
-            )
+            raise serializers.ValidationError("This email is already used by another account.")
         return value
 
 
@@ -114,27 +117,16 @@ class ChangePasswordSerializer(serializers.Serializer):
     def validate_old_password(self, value):
         user = self.context["request"].user
         if not user.check_password(value):
-            raise serializers.ValidationError("La contraseña actual no es correcta.")
+            raise serializers.ValidationError("The current password is incorrect.")
         return value
 
     def validate(self, attrs):
-        password = attrs.get("password")
-        password2 = attrs.get("password2")
-
-        if password != password2:
-            raise serializers.ValidationError(
-                {"password2": "Las contraseñas no coinciden."}
-            )
-
-        password_errors = validate_password_strength(password)
-        if password_errors:
-            raise serializers.ValidationError({"password": password_errors})
-
-        return attrs
+        return validate_matching_passwords(attrs)
 
 
-# Para documentar Swagger del register (user + tokens)
 class RegisterResponseSerializer(serializers.Serializer):
+    """Response schema for the registration endpoint (used for the OpenAPI docs)."""
+
     user = UserSerializer()
     access = serializers.CharField()
     refresh = serializers.CharField()

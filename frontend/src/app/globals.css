@@ -1,9 +1,6 @@
+/* Theme variables. The dark theme is activated by ThemeContext, which sets
+   data-theme="dark" on the <html> element. */
 :root {
-  /*
-    aqui definimos el tema claro base
-    la idea es que casi toda la web tire de estas variables y asi podamos
-    cambiar el aspecto general sin ir clase por clase
-  */
   --bg-color: #f4f4f9;
   --text-color: #333;
   --primary-color: #0070f3;
@@ -12,19 +9,17 @@
   --bot-msg-bg: #e1f5fe;
   --user-msg-bg: #dcedc8;
   --danger-color: #ff4d4f;
+  --success-color: #22c55e;
   --card-bg: #ffffff;
   --input-bg: #ffffff;
   --muted-text: #666;
   --hover-primary: #005bb5;
   --danger-hover: #cc0000;
+  --secondary-bg: #6b7280;
+  --secondary-hover: #4b5563;
 }
 
 [data-theme="dark"] {
-  /*
-    este bloque se activa cuando en el html aparece data-theme="dark"
-    ese atributo lo ponemos desde themecontext asi que aqui realmente estamos
-    viendo la parte visual del modo oscuro
-  */
   --bg-color: #111827;
   --text-color: #f3f4f6;
   --primary-color: #60a5fa;
@@ -33,25 +28,23 @@
   --bot-msg-bg: #1e3a5f;
   --user-msg-bg: #35524a;
   --danger-color: #f87171;
+  --success-color: #4ade80;
   --card-bg: #1f2937;
   --input-bg: #111827;
   --muted-text: #9ca3af;
   --hover-primary: #3b82f6;
   --danger-hover: #ef4444;
+  --secondary-bg: #4b5563;
+  --secondary-hover: #6b7280;
 }
 
 * {
-  /* aqui reseteamos margenes y paddings para no pelear con los estilos por defecto del navegador */
   box-sizing: border-box;
   margin: 0;
   padding: 0;
 }
 
 body {
-  /*
-    este es el lienzo general de toda la app
-    si vemos que toda la web cambia de fondo o tipografia normalmente vendra de aqui
-  */
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   background-color: var(--bg-color);
   color: var(--text-color);
@@ -60,11 +53,8 @@ body {
   min-height: 100vh;
 }
 
+/* Layout: header and footer */
 .layout-header {
-  /*
-    esta es la franja horizontal de arriba del todo
-    visualmente es la barra superior donde vemos el titulo y los enlaces para movernos
-  */
   background-color: var(--header-bg);
   border-bottom: 1px solid var(--border-color);
   padding: 1rem 2rem;
@@ -74,22 +64,16 @@ body {
 }
 
 .layout-header h2 {
-  /* este es el titulo grande de la izquierda del header */
   color: var(--text-color);
 }
 
 .layout-header h2 a {
-  /* quitamos el subrayado al enlace del titulo para que parezca mas nombre de app */
   color: inherit;
   text-decoration: none;
 }
 
 .layout-header nav a,
 .layout-header nav button {
-  /*
-    estos son los enlaces y botones de la zona derecha del header
-    entrar registro dashboard perfil salir modo oscuro y cosas asi
-  */
   margin-left: 1rem;
   text-decoration: none;
   color: var(--primary-color);
@@ -99,23 +83,7 @@ body {
   font-size: 1rem;
 }
 
-.layout-main {
-  /*
-    este seria el contenedor general del contenido central
-    si una pagina parece muy pegada a los bordes o demasiado ancha mirariamos algo de aqui
-  */
-  flex: 1;
-  padding: 2rem;
-  max-width: 800px;
-  margin: 0 auto;
-  width: 100%;
-}
-
 .layout-footer {
-  /*
-    esta es la franja inferior comun a toda la web
-    visualmente es la barra de abajo con el texto de autores
-  */
   text-align: center;
   padding: 1rem;
   border-top: 1px solid var(--border-color);
@@ -124,38 +92,35 @@ body {
   color: var(--muted-text);
 }
 
+/* Cards and forms */
 .card {
-  /*
-    esta clase genera las tarjetas blancas u oscuras donde metemos contenido
-    se ve en login registro perfil y tambien en algunos bloques del dashboard
-  */
   background: var(--card-bg);
   padding: 2rem;
   border-radius: 8px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
 }
 
+.auth-card {
+  max-width: 400px;
+  margin: 4rem auto;
+}
+
+.auth-title {
+  margin-bottom: 1.5rem;
+}
+
 .form-group {
-  /*
-    cada grupo visual de formulario o sea label arriba e input debajo
-    si vemos campos muy apelotonados o mal alineados esto suele estar metido
-  */
   margin-bottom: 1rem;
   display: flex;
   flex-direction: column;
 }
 
 .form-group label {
-  /* texto pequeño encima de cada input */
   margin-bottom: 0.5rem;
   font-weight: 500;
 }
 
 .form-group input {
-  /*
-    aspecto base de casi todos los inputs de la app
-    visualmente son las cajas donde escribimos usuario password busqueda mensaje etc
-  */
   padding: 0.75rem;
   border: 1px solid var(--border-color);
   border-radius: 4px;
@@ -163,11 +128,15 @@ body {
   color: var(--text-color);
 }
 
+.help-text {
+  color: var(--muted-text);
+  font-size: 0.8rem;
+  margin-top: 4px;
+}
+
+/* Buttons */
 .btn {
-  /*
-    boton principal azul de la aplicacion
-    lo vemos en acciones importantes como iniciar sesion registrarse enviar o crear chat
-  */
+  display: inline-block;
   padding: 0.75rem 1.5rem;
   border: none;
   border-radius: 4px;
@@ -175,119 +144,88 @@ body {
   color: white;
   cursor: pointer;
   font-size: 1rem;
+  text-align: center;
+  text-decoration: none;
   transition: background 0.2s;
 }
 
 .btn:hover {
-  /* cambio visual del boton principal al pasar el raton */
   background-color: var(--hover-primary);
 }
 
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 .btn-danger {
-  /* variante roja para acciones destructivas sobre todo borrar chat */
   background-color: var(--danger-color);
 }
 
 .btn-danger:hover {
-  /* hover del boton rojo */
   background-color: var(--danger-hover);
 }
 
+.btn-secondary {
+  background-color: var(--secondary-bg);
+}
+
+.btn-secondary:hover {
+  background-color: var(--secondary-hover);
+}
+
+.btn-sm {
+  padding: 0.5rem 1rem;
+}
+
+/* Feedback messages and links */
 .error-text {
-  /*
-    texto de error en rojo
-    lo reconocemos rapido porque suele salir encima de formularios cuando algo falla
-  */
   color: var(--danger-color);
   font-size: 0.85rem;
   margin-top: 0.25rem;
 }
 
-.auth-card {
-  /*
-    tarjeta centrada y estrecha para login o registro
-    visualmente es el bloque principal que aparece en medio de esas pantallas
-  */
-  max-width: 400px;
-  margin: 4rem auto;
+.success-text {
+  color: var(--success-color);
+  font-size: 0.85rem;
+  margin-top: 0.25rem;
 }
 
-.auth-card-large {
-  /* variante mas ancha por si necesitamos formularios con mas campos */
-  max-width: 500px;
-  margin: 2rem auto;
+.text-danger {
+  color: var(--danger-color);
 }
 
-.auth-title {
-  /* titulo grande de login registro o perfil */
-  margin-bottom: 1.5rem;
+.primary-link {
+  color: var(--primary-color);
 }
 
+/* Utilities */
 .mb-1 {
-  /* utilidad rapida margen inferior pequeño */
   margin-bottom: 1rem;
 }
 
-.mb-1-5 {
-  /* utilidad rapida margen inferior intermedio */
-  margin-bottom: 1.5rem;
-}
-
 .mb-2 {
-  /* utilidad rapida margen inferior grande */
   margin-bottom: 2rem;
 }
 
 .mt-1 {
-  /* utilidad rapida margen superior pequeño */
   margin-top: 1rem;
 }
 
 .mt-2 {
-  /* utilidad rapida margen superior grande */
   margin-top: 2rem;
 }
 
 .w-100 {
-  /* hace que el elemento ocupe todo el ancho disponible muy comun en botones de formularios */
   width: 100%;
 }
 
 .text-center {
-  /* centra texto lo usamos por ejemplo en enlaces secundarios o mensajes cortos */
   text-align: center;
 }
 
-.text-danger {
-  /* color rojo reutilizable para titulos o textos de error */
-  color: var(--danger-color);
-}
-
-.text-success {
-  /* color verde para mensajes de operacion correcta */
-  color: #22c55e;
-}
-
-.primary-link {
-  /* enlace destacado con el color principal de la app */
-  color: var(--primary-color);
-}
-
-.help-text {
-  /*
-    texto de ayuda pequeño debajo de un input
-    visualmente son las pistas tipo la contraseña debe tal
-  */
-  color: var(--muted-text);
-  font-size: 0.8rem;
-  margin-top: 4px;
-}
-
+/* Dashboard */
 .dashboard-header {
-  /*
-    cabecera del dashboard donde vemos el titulo tus chats y el boton de crear chat
-    uno a la izquierda y otro a la derecha
-  */
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -295,88 +233,43 @@ body {
 }
 
 .dashboard-usage-text {
-  /* texto grande del contador de mensajes restantes */
   margin-top: 1rem;
   font-size: 1.2rem;
 }
 
 .chat-list {
-  /*
-    columna donde se apilan todas las tarjetas de chats del dashboard
-    visualmente es el historico de conversaciones
-  */
   display: flex;
   flex-direction: column;
   gap: 1rem;
 }
 
+.chat-list-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  border: 1px solid var(--border-color);
+  margin-bottom: 0.5rem;
+  border-radius: 4px;
+  background: var(--card-bg);
+}
+
+.chat-title {
+  color: var(--text-color);
+}
+
 .chat-date {
-  /* fecha pequeña y secundaria que sale debajo del titulo del chat */
   font-size: 0.8rem;
   color: var(--muted-text);
 }
 
-.chat-title {
-  /*
-    titulo visible de cada chat en el dashboard
-    si algo no se ve bien en el nombre del chat esta clase o el jsx que la usa nos interesan
-  */
-  color: #000;
-}
-
 .chat-actions {
-  /* contenedor horizontal de botones tipo abrir y borrar en cada chat listado */
   display: flex;
   gap: 0.5rem;
 }
 
-.btn-sm {
-  /* version compacta de los botones para listas o barras superiores */
-  padding: 0.5rem 1rem;
-}
-
-.chat-top-bar {
-  /*
-    barra superior dentro de la pantalla de un chat concreto
-    visualmente es donde aparece el titulo del chat y el boton de volver atras
-  */
-  padding: 1rem;
-  border-bottom: 1px solid var(--border-color);
-  background: var(--card-bg);
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.msg-text {
-  /* hace que los mensajes respeten saltos de linea y no se vean todos apelmazados */
-  white-space: pre-wrap;
-  margin-top: 0.25rem;
-}
-
-.msg-pending {
-  /* texto apagado del estado pensando del llm */
-  color: var(--muted-text);
-  margin-top: 0.25rem;
-}
-
-.profile-container {
-  /*
-    contenedor vertical para una posible maquetacion de perfil por bloques
-    ahora mismo no es lo principal pero si rehacemos perfil nos puede servir
-  */
-  display: flex;
-  flex-direction: column;
-  gap: 2rem;
-  max-width: 600px;
-  margin: 0 auto;
-}
-
+/* Chat view */
 .chat-container {
-  /*
-    caja grande de la vista de chat
-    visualmente es todo el modulo que contiene barra superior mensajes y caja de escribir
-  */
   display: flex;
   flex-direction: column;
   height: 60vh;
@@ -386,11 +279,16 @@ body {
   overflow: hidden;
 }
 
+.chat-top-bar {
+  padding: 1rem;
+  border-bottom: 1px solid var(--border-color);
+  background: var(--card-bg);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
 .chat-messages {
-  /*
-    zona central desplazable donde se acumulan los mensajes
-    si el scroll o la altura del historial fallan mirariamos aqui
-  */
   flex: 1;
   padding: 1rem;
   overflow-y: auto;
@@ -400,10 +298,6 @@ body {
 }
 
 .message {
-  /*
-    burbuja base de un mensaje
-    luego la posicion real izquierda derecha la rematan .message.llm y .message.user
-  */
   max-width: 75%;
   padding: 0.75rem 1rem;
   border-radius: 8px;
@@ -411,53 +305,38 @@ body {
 }
 
 .message.llm {
-  /*
-    mensaje del modelo
-    visualmente aparece pegado a la izquierda y con color de fondo del bot
-  */
   align-self: flex-start;
   background-color: var(--bot-msg-bg);
 }
 
 .message.user {
-  /*
-    mensaje del usuario
-    visualmente aparece pegado a la derecha y con otro color para distinguirlo rapido
-  */
   align-self: flex-end;
   background-color: var(--user-msg-bg);
 }
 
+/* Preserve line breaks in messages. */
+.msg-text {
+  white-space: pre-wrap;
+  margin-top: 0.25rem;
+}
+
+.msg-pending {
+  color: var(--muted-text);
+  margin-top: 0.25rem;
+}
+
 .chat-input {
-  /*
-    franja inferior del chat donde escribimos y enviamos
-    visualmente es la zona de caja de texto mas boton enviar
-  */
   display: flex;
   padding: 1rem;
   border-top: 1px solid var(--border-color);
 }
 
 .chat-input input {
-  /* input horizontal grande de la parte de abajo del chat */
   flex: 1;
   padding: 0.75rem;
-  border: 1px solid #ccc;
+  border: 1px solid var(--border-color);
   border-radius: 4px;
   margin-right: 0.5rem;
-}
-
-.chat-list-item {
-  /*
-    cada fila o tarjeta individual del listado de chats del dashboard
-    visualmente es cada bloque con titulo fecha y botones de abrir o borrar
-  */
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 1rem;
-  border: 1px solid var(--border-color);
-  margin-bottom: 0.5rem;
-  border-radius: 4px;
-  background: white;
+  background-color: var(--input-bg);
+  color: var(--text-color);
 }

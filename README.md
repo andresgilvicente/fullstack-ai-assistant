@@ -1,444 +1,254 @@
-# DAS Monorepo - Sistema de IA con Django y Next.js
+<p align="center">
+  <img src="docs/assets/banner.svg" alt="AI Chat Assistant" width="100%">
+</p>
 
-Monorepo completo para el proyecto DAS (Django AI System) que incluye frontend, backend y servicios de IA con Ollama.
+# AI Chat Assistant
 
-## 📁 Estructura del Proyecto
+A full-stack chat application in which authenticated users hold conversations with a language model that runs entirely on their own machine. The system is composed of a Next.js client, a Django REST API, a PostgreSQL database and an Ollama inference server, and the whole stack starts with a single `docker compose up`.
 
+No external AI service or API key is required: inference is served locally by Ollama.
+
+## Features
+
+- **Local LLM inference.** Conversations are answered by a model served through Ollama (`llama3.2:3b` by default, configurable).
+- **Token-based authentication.** Registration, login, profile management and password changes, secured with JWT access and refresh tokens. Refresh tokens are rotated and blacklisted on logout.
+- **Persistent conversations.** Every chat and message is stored per user, and the complete history is sent to the model on each turn.
+- **Monthly usage quota.** Each user has a message allowance that is enforced on the server and renewed automatically after the reset date.
+- **Search.** The dashboard filters conversations by title or by message content.
+- **Light and dark themes.** The preference is persisted in the browser.
+- **Interactive API documentation.** An OpenAPI schema and Swagger UI are generated from the code.
+- **One-command deployment.** Docker Compose provisions the database, the model server, the API and the client, and downloads the configured models on first start.
+
+## Architecture
+
+```mermaid
+flowchart LR
+    Browser["Browser<br/>Next.js client"] -- "REST + JWT" --> API["Django REST API"]
+    API -- "ORM" --> DB[("PostgreSQL")]
+    API -- "chat completion" --> LLM["Ollama<br/>llama3.2"]
 ```
-monorepo/
-├── frontend/              # Aplicación Next.js
-│   ├── app/              # App router de Next.js
-│   ├── components/       # Componentes React
-│   ├── Dockerfile        # Docker para frontend
-│   └── package.json
-├── backend/              # API REST con Django
-│   ├── restApi/         # Proyecto Django
-│   ├── Dockerfile       # Docker para backend
-│   └── pyproject.toml
-├── docker-compose.yml   # Orquestación de servicios
-└── .env.example         # Variables de entorno
 
-```
+A message sent from the client follows this path:
 
-## 🚀 Quick Start
+1. The client calls `POST /api/chats/{id}/` with the user's JWT.
+2. The API validates the message against the user's monthly quota.
+3. Inside a database transaction, the API stores the user message, increments the usage counter, sends the full conversation history to Ollama and stores the assistant reply.
+4. The reply is returned to the client, which reloads the conversation.
 
-### 1. Clonar y configurar
+## Technology stack
+
+| Layer | Technologies |
+|---|---|
+| Frontend | Next.js 16 (App Router), React 19, CSS variables for theming |
+| Backend | Django 6, Django REST Framework, Simple JWT, drf-spectacular, django-cors-headers |
+| Database | PostgreSQL 16 (SQLite for local development) |
+| AI | Ollama, `llama3.2:3b` by default |
+| Infrastructure | Docker, Docker Compose, multi-stage builds, GitHub Actions |
+
+## Getting started
+
+### Prerequisites
+
+- Docker with Docker Compose v2
+- Approximately 4 GB of free disk space for the model, and 8 GB of RAM recommended
+
+### Run the stack
 
 ```bash
-# Clonar el repositorio
-git clone <repo-url>
-cd monorepo
+git clone https://github.com/andresgilvicente/fullstack-ai-assistant.git
+cd fullstack-ai-assistant
 
-# Copiar archivo de variables de entorno
+# Optional: customise the configuration. Every variable has a development default.
 cp .env.example .env
 
-# Editar .env y configurar los modelos que quieres descargar
-# Por defecto usa: OLLAMA_MODELS=llama3.2:3b
+docker compose up --build
 ```
 
-### 2. Levantar todos los servicios
+On the first start, the `ollama-init` service downloads the configured model, which can take several minutes. Follow its progress with:
 
 ```bash
-# Levantar toda la infraestructura
-docker-compose up -d
-
-# Ver logs
-docker-compose logs -f
-
-# Verificar que todo está corriendo
-docker-compose ps
+docker compose logs -f ollama-init
 ```
 
-### 3. Esperar a que Ollama descargue los modelos
+### Access the services
 
-La primera vez, Ollama descargará los modelos especificados en `.env`. Esto puede tardar varios minutos dependiendo del tamaño del modelo.
+| Service | URL |
+|---|---|
+| Web application | `http://localhost:3000` |
+| API documentation (Swagger UI) | `http://localhost:8000/api/docs/` |
+| Django admin | `http://localhost:8000/admin/` |
+| Ollama | `http://localhost:11434` |
+
+Create an account from the registration page to start chatting. To access the Django admin, create a superuser:
 
 ```bash
-# Ver progreso de descarga de modelos
-docker-compose logs -f ollama-init
+docker compose exec backend python restApi/manage.py createsuperuser
 ```
 
-### 4. Acceder a los servicios
-
-- **Frontend:** http://localhost:3000
-- **Backend API:** http://localhost:8000
-- **API Docs:** http://localhost:8000/api/docs/
-- **Django Admin:** http://localhost:8000/admin
-- **Ollama API:** http://localhost:11434
-
-## 🛠️ Servicios
-
-### Frontend (Next.js)
-- **Puerto:** 3000
-- **Tecnologías:** Next.js 16, React 19, Material-UI, Tailwind CSS
-- **Dockerfile:** `frontend/Dockerfile`
-
-### Backend (Django)
-- **Puerto:** 8000
-- **Tecnologías:** Django 6.0, DRF, JWT Auth, PostgreSQL
-- **Dockerfile:** `backend/Dockerfile`
-
-### PostgreSQL
-- **Puerto:** 5432
-- **Database:** `das_db`
-- **Usuario:** `das_user`
-- **Password:** `das_password`
-
-### Ollama (IA)
-- **Puerto:** 11434
-- **Modelos:** Configurables via `OLLAMA_MODELS` en `.env`
-- **API:** http://localhost:11434/api
-
-### Ollama Init
-- Servicio de inicialización que descarga automáticamente los modelos configurados
-- Se ejecuta una sola vez al inicio
-- Configurable via variable `OLLAMA_MODELS`
-
-## ⚙️ Configuración de Modelos de IA
-
-Edita el archivo `.env` para configurar qué modelos descargar:
+### Stop the stack
 
 ```bash
-# Un solo modelo
-OLLAMA_MODELS=llama3.2:3b
-
-# Múltiples modelos (separados por comas)
-OLLAMA_MODELS=llama3.2:3b,mistral:7b,codellama:7b
+docker compose down        # stop the containers
+docker compose down -v     # also delete the database and downloaded models
 ```
 
-### Modelos Recomendados
+## Configuration
 
-| Modelo | Tamaño | Uso Recomendado |
-|--------|--------|-----------------|
-| `llama3.2:1b` | ~1GB | Más rápido, ideal para desarrollo |
-| `llama3.2:3b` | ~3GB | Balance entre velocidad y capacidad |
-| `llama3.2:7b` | ~7GB | Más capaz, requiere más recursos |
-| `mistral:7b` | ~7GB | Excelente para tareas generales |
-| `codellama:7b` | ~7GB | Optimizado para código |
-| `phi3:mini` | ~2GB | Modelo pequeño de Microsoft |
+Docker Compose reads a `.env` file at the repository root. All variables are optional and fall back to development defaults. A template is provided in `.env.example`.
 
-## 🔧 Comandos Útiles
+| Variable | Default | Description |
+|---|---|---|
+| `OLLAMA_MODELS` | `llama3.2:3b` | Comma-separated list of models downloaded on start-up. |
+| `OLLAMA_MODEL` | `llama3.2:3b` | Model used to answer chat requests. |
+| `POSTGRES_DB` | `assistant_db` | Database name. |
+| `POSTGRES_USER` | `assistant` | Database user. |
+| `POSTGRES_PASSWORD` | `assistant_password` | Database password. |
+| `DJANGO_SECRET_KEY` | development key | Django secret key. **Must be set in production.** |
+| `DEBUG` | `True` | Django debug mode. **Set to `False` in production.** |
+| `NEXT_PUBLIC_API_URL` | `http://localhost:8000` | Backend URL as seen from the browser. Inlined at build time. |
 
-### Gestión de Servicios
+Smaller models trade answer quality for speed. For example, `llama3.2:1b` runs comfortably on modest hardware, while `mistral:7b` gives stronger answers at a higher memory cost.
+
+The defaults are intended for local use. Before exposing the application, set a strong `DJANGO_SECRET_KEY`, set `DEBUG=False`, change the database credentials, restrict `ALLOWED_HOSTS` and `CORS_ALLOWED_ORIGINS`, and serve the application over HTTPS.
+
+## API reference
+
+The complete, interactive reference is served at `/api/docs/`, and the machine-readable schema at `/api/schema/`. Endpoints other than registration, login, token refresh and the healthcheck require an `Authorization: Bearer <access token>` header.
+
+| Method | Endpoint | Description |
+|---|---|---|
+| `POST` | `/api/users/register/` | Create an account and receive a token pair. |
+| `POST` | `/api/auth/login/` | Obtain an access and refresh token pair. |
+| `POST` | `/api/auth/refresh/` | Exchange a refresh token for a new access token. |
+| `POST` | `/api/users/logout/` | Blacklist a refresh token. |
+| `GET` `PUT` | `/api/users/profile/` | Read or update the current user. |
+| `PUT` | `/api/users/profile/password/` | Change the password. |
+| `GET` | `/api/usage/` | Messages used, limit and reset date. |
+| `GET` `POST` | `/api/chats/` | List the user's chats or create a new one. |
+| `GET` `DELETE` | `/api/chats/{id}/` | Retrieve a chat with its messages, or delete it. |
+| `POST` | `/api/chats/{id}/` | Send a message and receive the assistant reply. |
+| `GET` | `/api/healthcheck/` | Service status. |
+
+Example:
 
 ```bash
-# Levantar servicios específicos
-docker-compose up -d frontend backend postgres
+# Log in
+curl -X POST http://localhost:8000/api/auth/login/ \
+  -H "Content-Type: application/json" \
+  -d '{"username": "alice", "password": "Str0ngPassword"}'
 
-# Solo backend y base de datos
-docker-compose up -d backend postgres
-
-# Ver logs de un servicio específico
-docker-compose logs -f backend
-
-# Reiniciar un servicio
-docker-compose restart backend
-
-# Detener todo
-docker-compose down
-
-# Detener y eliminar volúmenes (¡cuidado! borra la DB)
-docker-compose down -v
+# Send a message to chat 1
+curl -X POST http://localhost:8000/api/chats/1/ \
+  -H "Authorization: Bearer <access token>" \
+  -H "Content-Type: application/json" \
+  -d '{"content": "Explain what a REST API is in two sentences."}'
 ```
 
-### Backend (Django)
+## Local development
 
-```bash
-# Ejecutar migraciones
-docker-compose exec backend python restApi/manage.py migrate
-
-# Crear superusuario
-docker-compose exec backend python restApi/manage.py createsuperuser
-
-# Acceder al shell de Django
-docker-compose exec backend python restApi/manage.py shell
-
-# Ver logs del backend
-docker-compose logs -f backend
-```
-
-### PostgreSQL
-
-```bash
-# Conectarse a la base de datos
-docker-compose exec postgres psql -U das_user -d das_db
-
-# Backup de la base de datos
-docker-compose exec postgres pg_dump -U das_user das_db > backup.sql
-
-# Restaurar backup
-docker-compose exec -T postgres psql -U das_user -d das_db < backup.sql
-
-# Ver logs de PostgreSQL
-docker-compose logs -f postgres
-```
-
-### Ollama
-
-```bash
-# Listar modelos instalados
-docker-compose exec ollama ollama list
-
-# Descargar un modelo manualmente
-docker-compose exec ollama ollama pull llama3.2:3b
-
-# Eliminar un modelo
-docker-compose exec ollama ollama rm llama3.2:3b
-
-# Probar un modelo
-docker-compose exec ollama ollama run llama3.2:3b "Hola, ¿cómo estás?"
-
-# Ver logs de Ollama
-docker-compose logs -f ollama
-```
-
-### Reconstruir Servicios
-
-```bash
-# Reconstruir un servicio específico
-docker-compose up -d --build backend
-
-# Reconstruir todo
-docker-compose up -d --build
-
-# Forzar recreación de contenedores
-docker-compose up -d --force-recreate
-```
-
-## 🔍 Desarrollo Local (sin Docker)
+Running the services without Docker is useful for faster iteration. An Ollama instance must be reachable at `http://localhost:11434` (set `OLLAMA_HOST` otherwise).
 
 ### Backend
+
+Requires Python 3.14 and uv.
 
 ```bash
 cd backend
-
-# Instalar dependencias
+cp .env.example .env
 uv sync
+source .venv/bin/activate        # Windows: .venv\Scripts\activate
 
-# Activar entorno virtual
-source .venv/bin/activate
-
-# Ejecutar migraciones (usa SQLite por defecto)
 cd restApi
 python manage.py migrate
-
-# Crear superusuario
-python manage.py createsuperuser
-
-# Ejecutar servidor
 python manage.py runserver
 ```
 
+By default the backend uses SQLite. Set `USE_POSTGRES=true` and the `POSTGRES_*` variables to use PostgreSQL.
+
 ### Frontend
+
+Requires Node.js 20 or later.
 
 ```bash
 cd frontend
-
-# Instalar dependencias
 npm install
-
-# Ejecutar en modo desarrollo
 npm run dev
+```
 
-# Build de producción
+The client expects the API at `http://localhost:8000`. Override it with `NEXT_PUBLIC_API_URL`.
+
+## Testing
+
+```bash
+# Backend: unit and API tests (the LLM is mocked, so Ollama is not required)
+cd backend/restApi
+python manage.py test
+
+# Frontend: lint and production build
+cd frontend
+npm run lint
 npm run build
-npm start
 ```
 
-## 🌐 URLs de Desarrollo
+Both suites run in continuous integration on every push and pull request; see `.github/workflows/ci.yml`.
 
-### Servicios principales
-- **Frontend:** http://localhost:3000
-- **Backend API:** http://localhost:8000
-- **Django Admin:** http://localhost:8000/admin
-- **API Documentation:** http://localhost:8000/api/docs/
-- **API Schema:** http://localhost:8000/api/schema/
+## Project structure
 
-### Bases de datos
-- **PostgreSQL:** localhost:5432
-
-### IA
-- **Ollama API:** http://localhost:11434
-- **Ollama Health:** http://localhost:11434/api/tags
-
-## 🔐 Seguridad
-
-### Para Producción
-
-1. **Cambiar credenciales de PostgreSQL:**
-   ```bash
-   POSTGRES_PASSWORD=<password-seguro>
-   ```
-
-2. **Cambiar SECRET_KEY de Django:**
-   ```bash
-   DJANGO_SECRET_KEY=<clave-segura-generada>
-   ```
-
-3. **Deshabilitar DEBUG:**
-   ```bash
-   DEBUG=False
-   ```
-
-4. **Configurar ALLOWED_HOSTS:**
-   ```bash
-   ALLOWED_HOSTS=tudominio.com,www.tudominio.com
-   ```
-
-5. **Usar HTTPS** en producción
-
-6. **Configurar CORS correctamente** en el backend
-
-## 📊 Monitoreo
-
-### Verificar salud de los servicios
-
-```bash
-# Ver estado de todos los servicios
-docker-compose ps
-
-# Ver uso de recursos
-docker stats
-
-# Healthcheck de backend
-curl http://localhost:8000/health/
-
-# Healthcheck de Ollama
-curl http://localhost:11434/api/tags
+```
+|
+├── backend/
+│   ├── restApi/
+│   │   ├── restApi/        Project settings and URL routing
+│   │   ├── users/          Registration, profile, password change, logout
+│   │   ├── chats/          Chats, messages and the message-sending endpoint
+│   │   ├── usage/          Monthly message quota
+│   │   ├── ai/             Ollama client
+│   │   └── healthcheck/    Liveness endpoint
+│   ├── Dockerfile
+│   └── pyproject.toml
+├── frontend/
+│   ├── src/
+│   │   ├── app/            Routes: login, register, dashboard, chat, profile
+│   │   ├── components/     Header, footer and shared layout
+│   │   ├── context/        Authentication and theme providers
+│   │   └── services/       API client
+│   └── Dockerfile
+├── docs/
+│   ├── assets/             Repository assets
+│   └── sprint-reports/     Project reports, one per sprint (in Spanish)
+├── docker-compose.yml
+└── .env.example
 ```
 
-## 🐛 Troubleshooting
+## Design notes
 
-### El modelo no se descarga
+- **Local-first inference.** Keeping the model on the host removes third-party dependencies, API costs and data-sharing concerns, at the price of the hardware requirements above.
+- **Server-side quota enforcement.** The usage limit is checked and incremented in the API, inside the same transaction that stores the messages, so it cannot be bypassed from the client.
+- **Per-user data isolation.** Every chat query is scoped to the authenticated user, and requests for another user's chat return `404`.
+- **Stateless sessions with revocation.** JWT access tokens keep the API stateless, while refresh-token rotation and blacklisting allow sessions to be revoked on logout.
+- **Single source of truth for validation.** The password policy is enforced by the API and mirrored in the client for immediate feedback.
 
-```bash
-# Ver logs del servicio de inicialización
-docker-compose logs ollama-init
+Known limitations: replies are returned in a single response rather than streamed, and the full conversation history is sent on every turn, so very long chats will eventually exceed the model's context window.
 
-# Descargar manualmente
-docker-compose exec ollama ollama pull llama3.2:3b
-```
+## Documentation
 
-### Error de conexión a PostgreSQL
+The project was developed in three sprints. The report of each sprint, which covers task allocation, difficulties and deviations, is available in `docs/sprint-reports/`. The reports are written in Spanish.
 
-```bash
-# Verificar que PostgreSQL está corriendo
-docker-compose ps postgres
+| Sprint | Scope |
+|---|---|
+| Sprint 1 | REST API, data model, authentication, LLM integration and usage limits |
+| Sprint 2 | HTML, CSS and JavaScript prototype and mockups |
+| Sprint 3 | Migration to React and Next.js, dashboard, chat interface and profile |
 
-# Ver logs de PostgreSQL
-docker-compose logs postgres
+## Authors
 
-# Verificar healthcheck
-docker-compose exec postgres pg_isready -U das_user -d das_db
-```
+This project was developed as a team for the course *Desarrollo de Aplicaciones y Servicios* at Universidad Pontificia Comillas (ICAI).
 
-### Backend no puede conectarse a Ollama
+| | Contributions |
+|---|---|
+| **Andrés Gil Vicente** | Monorepo and Docker environment, authentication screens, dashboard and chat history, backend users and chat endpoints, usage limits |
+| **Jorge Carnicero Príncipe** | Data models, shared layout, chat interface, user profile, backend users and chat endpoints, usage limits |
 
-```bash
-# Verificar que Ollama está corriendo
-docker-compose ps ollama
+## License
 
-# Probar conexión desde el backend
-docker-compose exec backend curl http://ollama:11434/api/tags
-```
-
-### Puertos en uso
-
-```bash
-# Liberar puerto 3000, 8000, 5432 o 11434
-# En Linux/Mac:
-sudo lsof -ti:3000 | xargs kill -9
-
-# En Windows:
-netstat -ano | findstr :3000
-taskkill /PID <PID> /F
-```
-
-### Reconstruir desde cero
-
-```bash
-# Detener todo y eliminar volúmenes
-docker-compose down -v
-
-# Eliminar imágenes
-docker-compose down --rmi all
-
-# Reconstruir y levantar
-docker-compose up -d --build
-```
-
-## 📝 Variables de Entorno
-
-Copia `.env.example` a `.env` y ajusta según tus necesidades:
-
-```bash
-# Modelos de IA
-OLLAMA_MODELS=llama3.2:3b
-
-# Base de datos
-POSTGRES_DB=das_db
-POSTGRES_USER=das_user
-POSTGRES_PASSWORD=das_password
-
-# Django
-DJANGO_SECRET_KEY=change-this
-DEBUG=True
-
-# Frontend
-NEXT_PUBLIC_API_URL=http://localhost:8000
-```
-
-## 🧪 Testing
-
-### Backend
-
-```bash
-# Ejecutar tests
-docker-compose exec backend python restApi/manage.py test
-
-# Con coverage
-docker-compose exec backend coverage run --source='.' restApi/manage.py test
-docker-compose exec backend coverage report
-```
-
-### Frontend
-
-```bash
-# Ejecutar tests (si están configurados)
-docker-compose exec frontend npm test
-
-# Lint
-docker-compose exec frontend npm run lint
-```
-
-## 📚 Documentación Adicional
-
-- [Frontend README](./frontend/README.md)
-- [Backend README](./backend/README.md)
-- [Ollama Documentation](https://ollama.ai/docs)
-- [Django REST Framework](https://www.django-rest-framework.org/)
-- [Next.js Documentation](https://nextjs.org/docs)
-
-## 🤝 Contribuir
-
-1. Crea una rama: `git checkout -b feature/nueva-funcionalidad`
-2. Commit tus cambios: `git commit -am 'Añadir nueva funcionalidad'`
-3. Push a la rama: `git push origin feature/nueva-funcionalidad`
-4. Crea un Pull Request
-
-## 📄 Licencia
-
-Este proyecto es parte del curso DAS de Comillas.
-
----
-
-## 🎯 Próximos Pasos
-
-Después de levantar los servicios:
-
-1. ✅ Crear superusuario en Django
-2. ✅ Verificar que los modelos de Ollama se descargaron
-3. ✅ Probar la API desde http://localhost:8000/api/docs/
-4. ✅ Verificar el frontend en http://localhost:3000
-5. ✅ Integrar la comunicación frontend-backend
-6. ✅ Implementar funcionalidades de chat con IA
+Released under the MIT License. See the `LICENSE` file.

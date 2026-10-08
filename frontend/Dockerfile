@@ -1,75 +1,56 @@
-# Dockerfile para el Frontend (Next.js)
-# Multi-stage build para optimizar el tamaño de la imagen final
+# Frontend image (Next.js)
+# Multi-stage build to keep the final image small.
 
-# Etapa 1: Dependencias
+# Stage 1: dependencies
 FROM node:20-alpine AS deps
-# Añadir libc6-compat para compatibilidad con algunas dependencias nativas
+# libc6-compat is required by some native dependencies
 RUN apk add --no-cache libc6-compat
 
 WORKDIR /app
 
-# Copiar archivos de dependencias
 COPY package.json package-lock.json ./
-
-# Instalar dependencias
 RUN npm ci
 
-# Etapa 2: Builder
+# Stage 2: builder
 FROM node:20-alpine AS builder
 
 WORKDIR /app
 
-# Copiar dependencias desde la etapa anterior
 COPY --from=deps /app/node_modules ./node_modules
-
-# Copiar todo el código fuente
 COPY . .
 
-# Variables de entorno para el build
-# Next.js recopila datos de telemetría anónimos, puedes desactivarlo
+# Public backend URL, inlined into the client bundle at build time
+ARG NEXT_PUBLIC_API_URL=http://localhost:8000
+ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
 ENV NEXT_TELEMETRY_DISABLED=1
 
-# Build de la aplicación
 RUN npm run build
 
-# Etapa 3: Runner (imagen final)
+# Stage 3: runner
 FROM node:20-alpine AS runner
 
 WORKDIR /app
 
-# Variables de entorno de producción
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 
-# Crear usuario no-root para seguridad
+# Run as an unprivileged user
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
-# Copiar package files para node_modules de producción
 COPY package.json package-lock.json ./
+RUN npm ci --omit=dev && npm cache clean --force
 
-# Instalar solo dependencias de producción
-RUN npm ci --only=production && npm cache clean --force
-
-# Copiar archivos de configuración
 COPY --from=builder /app/next.config.mjs ./
-
-# Copiar el build de Next.js
 COPY --from=builder --chown=nextjs:nodejs /app/.next ./.next
 COPY --from=builder --chown=nextjs:nodejs /app/node_modules ./node_modules
 
-# Cambiar propietario de todos los archivos
 RUN chown -R nextjs:nodejs /app
-
-# Cambiar a usuario no-root
 USER nextjs
 
-# Exponer el puerto
 EXPOSE 3000
 
-# Configurar variable de entorno del puerto
 ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
 
-# Comando para iniciar la aplicación
 CMD ["npm", "start"]

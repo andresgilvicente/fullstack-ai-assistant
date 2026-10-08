@@ -1,7 +1,28 @@
-ollama
+# Environment files (keep only the examples under version control)
+.env
+.env.*
+!.env.example
 
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
 
-# files
-*.pdf
+# Local databases
+*.sqlite3
 
-*.env  
+# Node
+node_modules/
+.next/
+
+# Editors and operating system
+.vscode/
+.idea/
+.zed/
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log

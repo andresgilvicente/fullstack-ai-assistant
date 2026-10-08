@@ -1,269 +1,71 @@
-# Backend DAS - Django REST API
+# Backend
 
-Backend service para la aplicación DAS (Django AI System) con soporte para PostgreSQL y SQLite.
+Django REST API for the AI Chat Assistant. It handles authentication, chat persistence, usage quotas and communication with the Ollama inference server.
 
-## 🚀 Características
+For the project overview, see the [root README](../README.md).
 
-- Django 6.0 con Django REST Framework
-- Autenticación JWT con refresh tokens
-- Soporte para PostgreSQL (Docker) y SQLite (local)
-- Integración con Ollama para AI
-- Documentación automática de API con drf-spectacular
-- CORS habilitado para desarrollo
+## Applications
 
-## 📋 Requisitos
+| App | Responsibility |
+|---|---|
+| `users` | Custom user model, registration, profile, password change and logout. |
+| `chats` | Chats, messages and the endpoint that sends a message to the model. |
+| `usage` | Monthly message quota per user. |
+| `ai` | Ollama client (`llm_service.call_llm`). |
+| `healthcheck` | Liveness endpoint. |
 
-- Python 3.14+
-- PostgreSQL 16+ (para producción/Docker)
-- uv (gestor de paquetes Python)
+## Requirements
 
-## 🛠️ Instalación
+- Python 3.14
+- [uv](https://docs.astral.sh/uv/)
+- An Ollama server reachable at `OLLAMA_HOST` (default `http://ollama:11434`, which is the Docker Compose service name)
 
-### Desarrollo Local (SQLite)
+## Running locally
 
 ```bash
-# Instalar dependencias
-uv sync
-
-# Activar el entorno virtual
-source .venv/bin/activate
-
-# Crear archivo .env (opcional para desarrollo local)
 cp .env.example .env
+uv sync
+source .venv/bin/activate        # Windows: .venv\Scripts\activate
 
-# Ejecutar migraciones
 cd restApi
 python manage.py migrate
-
-# Crear superusuario
-python manage.py createsuperuser
-
-# Ejecutar servidor de desarrollo
+python manage.py createsuperuser  # optional
 python manage.py runserver
 ```
 
-El servidor estará disponible en `http://localhost:8000`
+The API is available at `http://localhost:8000` and the interactive documentation at `http://localhost:8000/api/docs/`.
 
-### Con Docker (PostgreSQL)
+## Configuration
 
-```bash
-# Desde la raíz del monorepo
-docker-compose up -d backend
+Settings are read from environment variables, optionally loaded from a `.env` file.
 
-# Ver logs
-docker-compose logs -f backend
+| Variable | Default | Description |
+|---|---|---|
+| `DJANGO_SECRET_KEY` | development key | Secret key. Must be set in production. |
+| `DEBUG` | `True` | Debug mode. Set to `False` in production. |
+| `ALLOWED_HOSTS` | `localhost,127.0.0.1,0.0.0.0` | Comma-separated list of allowed hosts. |
+| `USE_POSTGRES` | `false` | `true` selects PostgreSQL, otherwise SQLite is used. |
+| `POSTGRES_DB`, `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_HOST`, `POSTGRES_PORT` | see `settings.py` | PostgreSQL connection. |
+| `CORS_ALLOW_ALL_ORIGINS` | `True` | Allow every origin. Disable it and set `CORS_ALLOWED_ORIGINS` in production. |
+| `CORS_ALLOWED_ORIGINS` | empty | Comma-separated list of allowed origins. |
+| `OLLAMA_HOST` | `http://ollama:11434` | Ollama server URL. |
+| `OLLAMA_MODEL` | `llama3.2:3b` | Model used for chat completions. |
 
-# Ejecutar migraciones (si es necesario)
-docker-compose exec backend python restApi/manage.py migrate
-
-# Crear superusuario
-docker-compose exec backend python restApi/manage.py createsuperuser
-```
-
-## 🗄️ Configuración de Base de Datos
-
-### SQLite (Desarrollo Local)
-
-Por defecto, el proyecto usa SQLite para desarrollo local. No requiere configuración adicional.
-
-### PostgreSQL (Docker/Producción)
-
-Para usar PostgreSQL, configura las siguientes variables de entorno:
+## Testing
 
 ```bash
-USE_POSTGRES=true
-POSTGRES_DB=das_db
-POSTGRES_USER=das_user
-POSTGRES_PASSWORD=das_password
-POSTGRES_HOST=postgres  # o localhost si está fuera de Docker
-POSTGRES_PORT=5432
+cd restApi
+python manage.py test
 ```
 
-El servicio de PostgreSQL está configurado en `docker-compose.yml` con:
-- **Usuario:** das_user
-- **Password:** das_password
-- **Base de datos:** das_db
-- **Puerto:** 5432
+The tests cover registration and validation, profile and password management, token blacklisting, chat isolation between users, quota enforcement and renewal, and message storage. The LLM call is mocked, so Ollama is not required.
 
-## 🔧 Variables de Entorno
+## Docker
 
-Copia `.env.example` a `.env` y ajusta según tus necesidades:
+The image is built in two stages and runs as an unprivileged user. On start-up it applies the migrations and launches the development server. Use the root `docker-compose.yml` to run it together with its dependencies:
 
 ```bash
-# Database
-USE_POSTGRES=false                    # true para PostgreSQL, false para SQLite
-POSTGRES_DB=das_db
-POSTGRES_USER=das_user
-POSTGRES_PASSWORD=das_password
-POSTGRES_HOST=postgres
-POSTGRES_PORT=5432
-
-# Django
-SECRET_KEY=your-secret-key-here
-DEBUG=True
-ALLOWED_HOSTS=localhost,127.0.0.1
-
-# Ollama
-OLLAMA_HOST=http://localhost:7869
+docker compose up --build backend
 ```
 
-## 📚 Estructura del Proyecto
-
-```
-backend/
-├── restApi/               # Proyecto Django principal
-│   ├── restApi/          # Configuración del proyecto
-│   │   ├── settings.py   # Configuración (incluye DB)
-│   │   ├── urls.py       # URLs principales
-│   │   └── wsgi.py
-│   ├── ai/               # App de inteligencia artificial
-│   ├── chats/            # App de gestión de chats
-│   ├── users/            # App de usuarios
-│   ├── usage/            # App de métricas de uso
-│   ├── healthcheck/      # App de health checks
-│   └── manage.py         # CLI de Django
-├── pyproject.toml        # Dependencias del proyecto
-├── Dockerfile            # Configuración Docker
-└── .env.example          # Ejemplo de variables de entorno
-```
-
-## 🔌 Endpoints Principales
-
-### Autenticación
-
-- `POST /api/auth/register/` - Registro de usuario
-- `POST /api/auth/login/` - Login (obtener tokens JWT)
-- `POST /api/auth/refresh/` - Refrescar access token
-- `POST /api/auth/logout/` - Logout (blacklist token)
-
-### Health Check
-
-- `GET /health/` - Estado del servicio
-
-### Documentación API
-
-- `GET /api/schema/` - Schema OpenAPI
-- `GET /api/docs/` - Documentación interactiva (Swagger UI)
-
-## 🐳 Docker
-
-### Construir imagen
-
-```bash
-docker build -t backend-das:latest ./backend
-```
-
-### Ejecutar contenedor standalone
-
-```bash
-docker run -p 8000:8000 \
-  -e USE_POSTGRES=true \
-  -e POSTGRES_HOST=postgres \
-  -e POSTGRES_DB=das_db \
-  -e POSTGRES_USER=das_user \
-  -e POSTGRES_PASSWORD=das_password \
-  backend-das:latest
-```
-
-### Con docker-compose
-
-```bash
-# Levantar backend con PostgreSQL
-docker-compose up -d backend postgres
-
-# Ver logs
-docker-compose logs -f backend
-
-# Acceder al shell de Django
-docker-compose exec backend python restApi/manage.py shell
-
-# Ejecutar migraciones
-docker-compose exec backend python restApi/manage.py migrate
-
-# Crear superusuario
-docker-compose exec backend python restApi/manage.py createsuperuser
-```
-
-## 🧪 Testing
-
-```bash
-# Ejecutar tests
-python restApi/manage.py test
-
-# Con coverage
-coverage run --source='.' restApi/manage.py test
-coverage report
-```
-
-## 🔍 Linting
-
-```bash
-# Ejecutar pylint
-pylint restApi/
-```
-
-## 📊 Migraciones
-
-```bash
-# Crear migraciones
-python manage.py makemigrations
-
-# Aplicar migraciones
-python manage.py migrate
-
-# Ver estado de migraciones
-python manage.py showmigrations
-
-# Ver SQL de una migración
-python manage.py sqlmigrate app_name migration_name
-```
-
-## 🔐 Seguridad
-
-- Cambia `SECRET_KEY` en producción
-- Configura `DEBUG=False` en producción
-- Actualiza `ALLOWED_HOSTS` con tus dominios
-- Usa contraseñas seguras para PostgreSQL
-- Implementa HTTPS en producción
-- Revisa y ajusta los tiempos de expiración de JWT
-
-## 📝 Comandos Útiles
-
-```bash
-# Instalar nueva dependencia
-uv add nombre-paquete
-
-# Actualizar dependencias
-uv sync
-
-# Ver información de la base de datos
-docker-compose exec postgres psql -U das_user -d das_db
-
-# Backup de la base de datos
-docker-compose exec postgres pg_dump -U das_user das_db > backup.sql
-
-# Restaurar backup
-docker-compose exec -T postgres psql -U das_user -d das_db < backup.sql
-
-# Ver logs de PostgreSQL
-docker-compose logs -f postgres
-```
-
-## 🌐 URLs de Desarrollo
-
-- **Backend API:** http://localhost:8000
-- **Admin Django:** http://localhost:8000/admin
-- **API Docs:** http://localhost:8000/api/docs/
-- **PostgreSQL:** localhost:5432
-- **Ollama:** http://localhost:7869
-
-## 🤝 Contribuir
-
-1. Crea una rama para tu feature: `git checkout -b feature/nueva-funcionalidad`
-2. Commit tus cambios: `git commit -am 'Añadir nueva funcionalidad'`
-3. Push a la rama: `git push origin feature/nueva-funcionalidad`
-4. Crea un Pull Request
-
-## 📄 Licencia
-
-Este proyecto es parte del curso DAS de Comillas.
+The Compose file mounts `./backend` into the container, so source changes are picked up without rebuilding. For production, replace the development server with a WSGI server such as Gunicorn.

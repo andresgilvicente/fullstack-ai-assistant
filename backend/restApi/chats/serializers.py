@@ -1,34 +1,36 @@
-from datetime import date, timedelta, datetime, UTC
-# from dateutil.relativedelta import relativedelta
+from datetime import UTC, datetime, timedelta
 
 from rest_framework import serializers
-from .models import Chat, ChatMessage
-from django.utils import timezone
-from usage.models import Usage 
 
-# serializer para los mensajes dentro de un chat
+from .models import Chat, ChatMessage
+
+USAGE_RESET_PERIOD = timedelta(days=30)
+
+
 class ChatMessageSerializer(serializers.ModelSerializer):
     class Meta:
         model = ChatMessage
-        fields = ['id', 'role', 'content', 'chat']
-        read_only_fields = ['id', 'chat']  # chat se asigna en la view, no lo manda el usuario
+        fields = ["id", "role", "content", "chat"]
+        read_only_fields = ["id", "chat"]
 
 
-# serializer para los chats, incluye los mensajes anidados
 class ChatSerializer(serializers.ModelSerializer):
-    messages = ChatMessageSerializer(many=True, read_only=True)  # lista de mensajes del chat
+    messages = ChatMessageSerializer(many=True, read_only=True)
 
     class Meta:
         model = Chat
-        fields = ['id', 'title', 'created_at', 'user', 'messages']
-        read_only_fields = ['id', 'created_at', 'user']  # user se asigna en la view con el jwt
+        fields = ["id", "title", "created_at", "user", "messages"]
+        read_only_fields = ["id", "created_at", "user"]
 
-
-# serializer para enviar un mensaje, aqui va la logica del limite mensual
-# reglas: si supera el limite y no toca renovar se bloquea
-#         si supera el limite pero ya paso la fecha de renovacion se renueva y deja enviar
 
 class SendMessageSerializer(serializers.Serializer):
+    """
+    Validate a new user message against the monthly usage quota.
+
+    If the reset date has passed, the counter is renewed before the check.
+    Otherwise, a user who has reached the limit is rejected.
+    """
+
     content = serializers.CharField()
 
     def validate(self, attrs):
@@ -36,49 +38,30 @@ class SendMessageSerializer(serializers.Serializer):
         user = getattr(request, "user", None)
 
         if user is None or not user.is_authenticated:
-            raise serializers.ValidationError("Usuario no autenticado.")
+            raise serializers.ValidationError("User is not authenticated.")
 
-        # usage 1-1
         try:
             usage = user.usage
         except Exception:
-            raise serializers.ValidationError("No se encontró el registro de uso para este usuario.")
+            raise serializers.ValidationError("No usage record found for this user.")
 
-        now = datetime.now(UTC)
+        today = datetime.now(UTC).date()
 
-        today = now.date()  # Extraemos solo la fecha (año-mes-día)
-
-        # Usamos 'today' en la comparación en lugar de 'now'
         if usage.reset_date is None or today >= usage.reset_date:
             usage.messages_used = 0
-            # IMPORTANTE: Cambiamos timedelta(days=30) para sumarlo a 'today'
-            usage.reset_date = today + timedelta(days=30) 
+            usage.reset_date = today + USAGE_RESET_PERIOD
             usage.save(update_fields=["messages_used", "reset_date"])
 
-        # Límite
         if usage.messages_used >= usage.messages_limit:
             raise serializers.ValidationError(
-                f"Has alcanzado tu límite de {usage.messages_limit} mensajes mensuales. "
-                f"Tu límite se renueva el {usage.reset_date}."
+                f"You have reached your monthly limit of {usage.messages_limit} messages. "
+                f"Your limit resets on {usage.reset_date}."
             )
 
         return attrs
+
 
 class SendMessageResponseSerializer(serializers.Serializer):
     chat_id = serializers.IntegerField()
     user_message = serializers.CharField()
     assistant_message = serializers.CharField()
-
-
-
-
-
-
-
-
-
-
-
-
-
-######################3

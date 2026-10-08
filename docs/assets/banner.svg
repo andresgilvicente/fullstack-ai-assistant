@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="320" viewBox="0 0 1280 320" role="img" aria-labelledby="title desc">
+  <title id="title">AI Chat Assistant</title>
+  <desc id="desc">Full-stack chat application with JWT authentication and a locally hosted language model, shown as a chat window above the Next.js, Django and Ollama request flow.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#f7fafd"/>
+      <stop offset="1" stop-color="#e1edfa"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#3b8fe0"/>
+      <stop offset="1" stop-color="#8cc8f7"/>
+    </linearGradient>
+    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M40 0H0V40" fill="none" stroke="#2b6cb0" stroke-opacity="0.07" stroke-width="1"/>
+    </pattern>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="130%">
+      <feDropShadow dx="0" dy="8" stdDeviation="12" flood-color="#1f4f8a" flood-opacity="0.14"/>
+    </filter>
+  </defs>
+
+  <rect width="1280" height="320" fill="url(#bg)"/>
+  <rect width="1280" height="320" fill="url(#grid)"/>
+
+  <!-- Title block -->
+  <rect x="80" y="96" width="56" height="4" rx="2" fill="url(#accent)"/>
+  <text x="80" y="164" font-family="'Segoe UI', 'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="56" font-weight="600" fill="#10243e" letter-spacing="-1">AI Chat Assistant</text>
+  <text x="80" y="204" font-family="'Segoe UI', 'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="21" fill="#4f647d">Full-stack chat application with JWT authentication</text>
+  <text x="80" y="232" font-family="'Segoe UI', 'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="21" fill="#4f647d">and a locally hosted language model.</text>
+  <text x="80" y="280" font-family="'Consolas', 'SFMono-Regular', Menlo, monospace" font-size="15" fill="#7a8da3" letter-spacing="1">POSTGRESQL  /  JWT  /  DOCKER COMPOSE</text>
+
+  <!-- Chat window -->
+  <g font-family="'Segoe UI', 'Helvetica Neue', Helvetica, Arial, sans-serif">
+    <rect x="700" y="44" width="520" height="190" rx="12" fill="#ffffff" stroke="#c9ddf1" stroke-width="1.5" filter="url(#shadow)"/>
+
+    <!-- Window bar -->
+    <path d="M700 78H1220" stroke="#c9ddf1" stroke-width="1"/>
+    <circle cx="724" cy="61" r="4.5" fill="#c9ddf1"/>
+    <circle cx="742" cy="61" r="4.5" fill="#c9ddf1"/>
+    <circle cx="760" cy="61" r="4.5" fill="#c9ddf1"/>
+    <text x="1196" y="65" font-size="12" fill="#7a8da3" text-anchor="end" letter-spacing="0.5">llama3.2:3b  ·  local</text>
+
+    <!-- User message -->
+    <rect x="918" y="92" width="278" height="32" rx="9" fill="#dcecfc" stroke="#3b8fe0" stroke-opacity="0.55" stroke-width="1"/>
+    <text x="934" y="113" font-size="14" fill="#10243e">How does JWT authentication work?</text>
+
+    <!-- Assistant message -->
+    <rect x="724" y="134" width="396" height="52" rx="9" fill="#eef4fb" stroke="#c9ddf1" stroke-width="1"/>
+    <text x="740" y="155" font-size="14" fill="#1d3552">The server signs a token at login and the client</text>
+    <text x="740" y="175" font-size="14" fill="#1d3552">sends it with every request. No session is stored.</text>
+
+    <!-- Input -->
+    <rect x="724" y="198" width="448" height="26" rx="7" fill="#f7fafd" stroke="#c9ddf1" stroke-width="1"/>
+    <text x="738" y="215" font-size="13" fill="#7a8da3">Type your message...</text>
+    <rect x="1180" y="198" width="16" height="26" rx="5" fill="url(#accent)"/>
+  </g>
+
+  <!-- Request flow -->
+  <text x="700" y="280" font-family="'Consolas', 'SFMono-Regular', Menlo, monospace" font-size="15" letter-spacing="1" fill="#4f647d">NEXT.JS<tspan fill="#3b8fe0" xml:space="preserve">   →   </tspan>DJANGO REST<tspan fill="#3b8fe0" xml:space="preserve">   →   </tspan>OLLAMA</text>
+</svg>
