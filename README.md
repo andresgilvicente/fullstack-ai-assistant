@@ -251,7 +251,3 @@ This project was developed as a team for the course *Desarrollo de Aplicaciones 
 
 Released under the MIT License. See the `LICENSE` file.
 
-## Authors
-
-- Jorge Carnicero Príncipe
-- Andrés Gil Vicente
