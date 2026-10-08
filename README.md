@@ -2,8 +2,6 @@
   <img src="docs/assets/banner.svg" alt="AI Chat Assistant" width="100%">
 </p>
 
-# AI Chat Assistant
-
 A full-stack chat application in which authenticated users hold conversations with a language model that runs entirely on their own machine. The system is composed of a Next.js client, a Django REST API, a PostgreSQL database and an Ollama inference server, and the whole stack starts with a single `docker compose up`.
 
 No external AI service or API key is required: inference is served locally by Ollama.
